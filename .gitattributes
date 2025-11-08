@@ -1,2 +1,29 @@
-# Auto detect text files and perform LF normalization
+# Установить автоматическое определение текстовых файлов
 * text=auto
+
+# Для всех текстовых файлов нормализовать окончания до LF
+* text eol=lf
+
+# Явно указать текстовые файлы
+*.txt text
+*.md text
+*.js text
+*.css text
+*.html text
+*.json text
+*.xml text
+*.py text
+*.java text
+*.c text
+*.cpp text
+*.h text
+
+# Исключить бинарные файлы
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.exe binary
