@@ -8,8 +8,6 @@ public class EnemyPool : MonoBehaviour
     [SerializeField] private int _initialPoolSize = 10;
     [SerializeField] private Transform _poolContainer;
 
-    private const float ResetPositionY = 0f;
-
     private Queue<Enemy> _inactiveEnemies = new Queue<Enemy>();
     private List<Enemy> _activeEnemies = new List<Enemy>();
 
@@ -23,6 +21,11 @@ public class EnemyPool : MonoBehaviour
             _poolContainer = transform;
 
         InitializePool();
+    }
+
+    private void OnDestroy()
+    {
+        UnsubscribeFromAllEnemies();
     }
 
     public Enemy GetEnemy(Vector3 position, Quaternion rotation)
@@ -39,6 +42,8 @@ public class EnemyPool : MonoBehaviour
         enemy.transform.rotation = rotation;
         enemy.gameObject.SetActive(true);
 
+        enemy.OnReturnToPoolRequested += HandleEnemyReturnRequest;
+
         return enemy;
     }
 
@@ -49,6 +54,8 @@ public class EnemyPool : MonoBehaviour
 
         if (_activeEnemies.Remove(enemy))
         {
+            enemy.OnReturnToPoolRequested -= HandleEnemyReturnRequest;
+
             enemy.gameObject.SetActive(false);
             enemy.transform.SetParent(_poolContainer);
             enemy.transform.position = Vector3.zero;
@@ -66,12 +73,12 @@ public class EnemyPool : MonoBehaviour
 
     public void ClearPool()
     {
+        UnsubscribeFromAllEnemies();
         ReturnAllActiveEnemies();
 
         while (_inactiveEnemies.Count > 0)
         {
             Enemy enemy = _inactiveEnemies.Dequeue();
-
             if (enemy != null)
                 Destroy(enemy.gameObject);
         }
@@ -91,7 +98,26 @@ public class EnemyPool : MonoBehaviour
     {
         Enemy enemy = Instantiate(_enemyPrefab, _poolContainer);
         enemy.gameObject.SetActive(false);
-        enemy.SetPool(this);
         _inactiveEnemies.Enqueue(enemy);
+    }
+
+    private void HandleEnemyReturnRequest(Enemy enemy)
+    {
+        ReturnEnemy(enemy);
+    }
+
+    private void UnsubscribeFromAllEnemies()
+    {
+        foreach (var enemy in _activeEnemies)
+        {
+            if (enemy != null)
+                enemy.OnReturnToPoolRequested -= HandleEnemyReturnRequest;
+        }
+
+        foreach (var enemy in _inactiveEnemies)
+        {
+            if (enemy != null)
+                enemy.OnReturnToPoolRequested -= HandleEnemyReturnRequest;
+        }
     }
 }

@@ -4,58 +4,47 @@ public class Enemy : MonoBehaviour
 {
     [Header("Настройки врага")]
     [SerializeField] private float _movementSpeed = 3f;
-    [SerializeField] private Animator _animator;
     [SerializeField] private float _deathHeight = 0f;
 
-    private const string WalkAnimationParameter = "IsWalking";
-
     private EnemyMovement _movement;
-    private EnemyPool _pool;
-
+    private EnemyAnimation _animation;
     private bool _isActive;
+
+    public event System.Action<Enemy> OnReturnToPoolRequested;
 
     private void Awake()
     {
         _movement = GetComponent<EnemyMovement>();
+        _animation = GetComponent<EnemyAnimation>();
     }
 
     private void Update()
     {
         if (_isActive && transform.position.y < _deathHeight)
         {
-            ReturnToPool();
+            RequestReturnToPool();
         }
     }
 
-    public void SetPool(EnemyPool pool)
-    {
-        _pool = pool;
-    }
-
-    public void StartMoving()
+    public void Initialize(Vector3 direction)
     {
         _isActive = true;
-        _movement.StartMovement(transform.forward, _movementSpeed);
-
-        if (_animator != null)
-        {
-            _animator.SetBool(WalkAnimationParameter, true);
-        }
+        _movement.StartMovement(direction, _movementSpeed);
+        _animation?.PlayWalkAnimation();
     }
 
-    private void ReturnToPool()
+    public void Deactivate()
+    {
+        _isActive = false;
+        _movement.StopMovement();
+    }
+
+    private void RequestReturnToPool()
     {
         if (!_isActive) 
             return;
 
-        _isActive = false;
-        _movement.StopMovement();
-
-        if (_animator != null)
-        {
-            _animator.SetBool(WalkAnimationParameter, false);
-        }
-
-        _pool?.ReturnEnemy(this);
+        Deactivate();
+        OnReturnToPoolRequested?.Invoke(this);
     }
 }

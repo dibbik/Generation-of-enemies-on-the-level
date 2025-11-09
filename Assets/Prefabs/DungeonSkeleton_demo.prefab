@@ -300,6 +300,7 @@ GameObject:
   - component: {fileID: 5820329357844215301}
   - component: {fileID: 3409427202798431187}
   - component: {fileID: -1424689479636901567}
+  - component: {fileID: -106696701566649321}
   m_Layer: 0
   m_Name: DungeonSkeleton_demo
   m_TagString: Untagged
@@ -358,7 +359,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _movementSpeed: 3
-  _animator: {fileID: 5164892246877472813}
   _deathHeight: -1.68
 --- !u!114 &5820329357844215301
 MonoBehaviour:
@@ -422,6 +422,19 @@ CapsuleCollider:
   m_Height: 2.5104985
   m_Direction: 1
   m_Center: {x: 0, y: 1.3116717, z: 0}
+--- !u!114 &-106696701566649321
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5164892246886874003}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e1f3af92a286ea545a25b6bc96e8dac5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _animator: {fileID: 5164892246877472813}
 --- !u!1 &5164892246886874005
 GameObject:
   m_ObjectHideFlags: 0

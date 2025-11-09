@@ -22,16 +22,7 @@ public class EnemySpawner : MonoBehaviour
 
     private void Start()
     {
-        if (_spawnPoints.Count == 0)
-        {
-            Debug.LogError("Не назначены точки спавна! Перетащи Transform'ы точек в Inspector");
-        }
-
-        if (_enemyPool == null)
-        {
-            Debug.LogError("Не назначен EnemyPool!");
-        }
-
+        ValidateDependencies();
         AdjustSpawnPointsHeight();
     }
 
@@ -59,7 +50,7 @@ public class EnemySpawner : MonoBehaviour
 
         if (enemy != null)
         {
-            enemy.StartMoving();
+            enemy.Initialize(spawnPoint.forward);
         }
     }
 
@@ -73,7 +64,6 @@ public class EnemySpawner : MonoBehaviour
             return hit.point + Vector3.up * GroundOffset;
         }
 
-        Debug.LogWarning($"Не найдена поверхность под точкой спавна: {spawnPointPosition}");
         return spawnPointPosition;
     }
 
@@ -95,5 +85,18 @@ public class EnemySpawner : MonoBehaviour
     {
         int randomIndex = Random.Range(0, _spawnPoints.Count);
         return _spawnPoints[randomIndex];
+    }
+
+    private void ValidateDependencies()
+    {
+        if (_spawnPoints.Count == 0)
+        {
+            Debug.LogError("Не назначены точки спавна! Перетащи Transform'ы точек в Inspector");
+        }
+
+        if (_enemyPool == null)
+        {
+            Debug.LogError("Не назначен EnemyPool!");
+        }
     }
 }
