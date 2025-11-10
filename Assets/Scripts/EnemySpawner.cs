@@ -4,99 +4,94 @@ using System.Collections.Generic;
 public class EnemySpawner : MonoBehaviour
 {
     [Header("Настройки спавна")]
-    [SerializeField] private float _spawnInterval = 2f;
-    [SerializeField] private LayerMask _groundLayer = 1;
+    [SerializeField] private int _maxEnemiesOnMap = 10;
+    [SerializeField] private float _globalSpawnCooldown = 1f;
 
-    [Header("Точки спавна")]
-    [SerializeField] private List<Transform> _spawnPoints = new List<Transform>();
-
-    [Header("Пул врагов")]
+    [Header("Ссылки")]
     [SerializeField] private EnemyPool _enemyPool;
+    [SerializeField] private List<EnemySpawnPoint> _spawnPoints = new List<EnemySpawnPoint>();
 
-    private const float RayStartHeight = 10f;
-    private const float RayLength = 20f;
-    private const float GroundOffset = 0.1f;
-    private const float MaxSpawnHeight = 1f;
+    private Dictionary<EnemySpawnPoint, float> _spawnTimers = new Dictionary<EnemySpawnPoint, float>();
+    private float _globalSpawnTimer;
+    private int _currentEnemiesCount;
 
-    private float _spawnTimer;
-
-    private void Start()
+    private void Awake()
     {
-        ValidateDependencies();
-        AdjustSpawnPointsHeight();
+        InitializeTimers();
     }
 
     private void Update()
     {
-        _spawnTimer -= Time.deltaTime;
-
-        if (_spawnTimer <= 0f)
-        {
-            SpawnEnemy();
-            _spawnTimer = _spawnInterval;
-        }
+        UpdateSpawning();
+        UpdateEnemiesCount();
     }
 
-    private void SpawnEnemy()
+    private void InitializeTimers()
     {
-        if (_spawnPoints.Count == 0 || _enemyPool == null) 
-            return;
-
-        Transform spawnPoint = GetRandomSpawnPoint();
-        Vector3 spawnPosition = GetSpawnPositionOnGround(spawnPoint.position);
-        Quaternion spawnRotation = spawnPoint.rotation;
-
-        Enemy enemy = _enemyPool.GetEnemy(spawnPosition, spawnRotation);
-
-        if (enemy != null)
+        foreach (var spawnPoint in _spawnPoints)
         {
-            enemy.Initialize(spawnPoint.forward);
-        }
-    }
-
-    private Vector3 GetSpawnPositionOnGround(Vector3 spawnPointPosition)
-    {
-        RaycastHit hit;
-        Vector3 rayStart = spawnPointPosition + Vector3.up * RayStartHeight;
-
-        if (Physics.Raycast(rayStart, Vector3.down, out hit, RayLength, _groundLayer))
-        {
-            return hit.point + Vector3.up * GroundOffset;
-        }
-
-        return spawnPointPosition;
-    }
-
-    private void AdjustSpawnPointsHeight()
-    {
-        foreach (Transform spawnPoint in _spawnPoints)
-        {
-            Vector3 currentPosition = spawnPoint.position;
-
-            if (currentPosition.y > MaxSpawnHeight)
+            if (spawnPoint != null)
             {
-                Vector3 newPosition = GetSpawnPositionOnGround(currentPosition);
-                spawnPoint.position = newPosition;
+                _spawnTimers[spawnPoint] = 0f;
             }
         }
     }
 
-    private Transform GetRandomSpawnPoint()
+    private void UpdateEnemiesCount()
     {
-        int randomIndex = Random.Range(0, _spawnPoints.Count);
-        return _spawnPoints[randomIndex];
+        Enemy[] activeEnemies = FindObjectsOfType<Enemy>();
+        _currentEnemiesCount = 0;
+
+        foreach (Enemy enemy in activeEnemies)
+        {
+            if (enemy.gameObject.activeInHierarchy && enemy.GetComponent<HealthSystem>().IsAlive)
+            {
+                _currentEnemiesCount++;
+            }
+        }
     }
 
-    private void ValidateDependencies()
+    private void UpdateSpawning()
     {
-        if (_spawnPoints.Count == 0)
-        {
-            Debug.LogError("Не назначены точки спавна! Перетащи Transform'ы точек в Inspector");
-        }
+        _globalSpawnTimer -= Time.deltaTime;
 
-        if (_enemyPool == null)
+        if (_globalSpawnTimer > 0f) 
+            return;
+
+        if (_currentEnemiesCount >= _maxEnemiesOnMap) 
+            return;
+
+        foreach (var spawnPoint in _spawnPoints)
         {
-            Debug.LogError("Не назначен EnemyPool!");
+            if (spawnPoint == null || spawnPoint.EnemyPrefab == null) 
+                continue;
+
+            if (!_spawnTimers.ContainsKey(spawnPoint))
+            {
+                _spawnTimers[spawnPoint] = 0f;
+            }
+
+            _spawnTimers[spawnPoint] -= Time.deltaTime;
+
+            if (_spawnTimers[spawnPoint] <= 0f)
+            {
+                SpawnEnemy(spawnPoint);
+                _spawnTimers[spawnPoint] = spawnPoint.SpawnCooldown;
+                _globalSpawnTimer = _globalSpawnCooldown;
+                break;
+            }
         }
+    }
+
+    private void SpawnEnemy(EnemySpawnPoint spawnPoint)
+    {
+        if (_enemyPool == null) 
+            return;
+
+        GameObject enemyObject = _enemyPool.GetEnemy(
+            spawnPoint.EnemyPrefab,
+            spawnPoint.Position,
+            Quaternion.identity
+        );
     }
 }

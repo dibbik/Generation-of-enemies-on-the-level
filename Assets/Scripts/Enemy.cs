@@ -1,50 +1,75 @@
-using UnityEngine;
+п»їusing UnityEngine;
 
+[RequireComponent(typeof(CharacterMovement))]
+[RequireComponent(typeof(HealthSystem))]
+[RequireComponent(typeof(AttackSystem))]
+[RequireComponent(typeof(TargetFinder))]
 public class Enemy : MonoBehaviour
 {
-    [Header("Настройки врага")]
-    [SerializeField] private float _movementSpeed = 3f;
-    [SerializeField] private float _deathHeight = 0f;
-
-    private EnemyMovement _movement;
-    private EnemyAnimation _animation;
-    private bool _isActive;
-
-    public event System.Action<Enemy> OnReturnToPoolRequested;
+    private CharacterMovement _movement;
+    private HealthSystem _health;
+    private AttackSystem _attack;
+    private TargetFinder _targetFinder;
+    private EnemyPool _pool;
+    private Transform _target;
 
     private void Awake()
     {
-        _movement = GetComponent<EnemyMovement>();
-        _animation = GetComponent<EnemyAnimation>();
+        _movement = GetComponent<CharacterMovement>();
+        _health = GetComponent<HealthSystem>();
+        _attack = GetComponent<AttackSystem>();
+        _targetFinder = GetComponent<TargetFinder>();
+        _pool = FindObjectOfType<EnemyPool>();
+
+        _health.DeathEvent += HandleDeath;
     }
 
     private void Update()
     {
-        if (_isActive && transform.position.y < _deathHeight)
+        if (!_health.IsAlive) 
+            return;
+
+        _target = _targetFinder.FindTarget(typeof(Hero));
+
+        if (_target == null)
         {
-            RequestReturnToPool();
+            _movement.StopMovement();
+            return;
+        }
+
+        float distance = Vector3.Distance(transform.position, _target.position);
+
+        if (distance <= _attack.AttackRange)
+        {
+            AttackBehavior();
+        }
+        else
+        {
+            ChaseBehavior();
         }
     }
 
-    public void Initialize(Vector3 direction)
+    private void HandleDeath()
     {
-        _isActive = true;
-        _movement.StartMovement(direction, _movementSpeed);
-        _animation?.PlayWalkAnimation();
+        _pool?.ReturnEnemy(gameObject);
     }
 
-    public void Deactivate()
+    private void ChaseBehavior()
     {
-        _isActive = false;
+        _attack.StopAttack();
+        _movement.SetMovementDirection(_target.position - transform.position);
+    }
+
+    private void AttackBehavior()
+    {
+        _attack.StartAttack();
         _movement.StopMovement();
-    }
 
-    private void RequestReturnToPool()
-    {
-        if (!_isActive) 
-            return;
+        Vector3 directionToTarget = (_target.position - transform.position).normalized;
+        directionToTarget.y = 0;
+        _movement.SetForcedRotation(directionToTarget);
 
-        Deactivate();
-        OnReturnToPoolRequested?.Invoke(this);
+        HealthSystem targetHealth = _target.GetComponent<HealthSystem>();
+        _attack.PerformAttack(targetHealth);
     }
 }
