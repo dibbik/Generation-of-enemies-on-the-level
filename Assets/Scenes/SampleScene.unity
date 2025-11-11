@@ -329,8 +329,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2279507784ca88949b8829073aea69a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _enemyPrefab: {fileID: 3272032449331055065, guid: 5cd04baedc4402645841fcfd2a1b9db7, type: 3}
+  _enemyPrefab: {fileID: 452676536360846962, guid: 5cd04baedc4402645841fcfd2a1b9db7, type: 3}
   _spawnCooldown: 5
+  _targetHeroPrefab: {fileID: 1344771172809719591, guid: 4996d348c3f3b8f4f9b5e8a41e1587ec, type: 3}
 --- !u!1001 &152443699
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -698,26 +699,24 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _heroConfigs:
-  - heroPrefab: {fileID: 5448383786773587477, guid: 9c6643abad371ba42be6ac8f6b014544, type: 3}
-    spawnPoint: {fileID: 854675861}
-    patrolRoute:
+  - HeroPrefab: {fileID: 1344771172809719591, guid: 9c6643abad371ba42be6ac8f6b014544, type: 3}
+    SpawnPoint: {fileID: 854675861}
+    PatrolRoute:
     - {fileID: 571190657}
     - {fileID: 1138288366}
     - {fileID: 813200360}
     - {fileID: 1225142039}
-    respawnCircle: {fileID: 444972484}
-    respawnDelay: 3
-    respawnCircleDuration: 5
-  - heroPrefab: {fileID: 5448383786773587477, guid: 4996d348c3f3b8f4f9b5e8a41e1587ec, type: 3}
-    spawnPoint: {fileID: 854675861}
-    patrolRoute:
+    RespawnEffect: {fileID: 444972484}
+    RespawnDelay: 3
+  - HeroPrefab: {fileID: 1344771172809719591, guid: 4996d348c3f3b8f4f9b5e8a41e1587ec, type: 3}
+    SpawnPoint: {fileID: 854675861}
+    PatrolRoute:
     - {fileID: 1300139470}
     - {fileID: 853955005}
     - {fileID: 915224079}
     - {fileID: 1510824009}
-    respawnCircle: {fileID: 444972484}
-    respawnDelay: 3
-    respawnCircleDuration: 5
+    RespawnEffect: {fileID: 444972484}
+    RespawnDelay: 3
   _heroPool: {fileID: 375503877}
 --- !u!114 &375503877
 MonoBehaviour:
@@ -1080,8 +1079,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2279507784ca88949b8829073aea69a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _enemyPrefab: {fileID: 4274450774870149262, guid: a13d3d43044ad4b4c97e8583a2bd1297, type: 3}
+  _enemyPrefab: {fileID: 1676780521108804834, guid: a13d3d43044ad4b4c97e8583a2bd1297, type: 3}
   _spawnCooldown: 3
+  _targetHeroPrefab: {fileID: 1344771172809719591, guid: 9c6643abad371ba42be6ac8f6b014544, type: 3}
 --- !u!1 &656931362
 GameObject:
   m_ObjectHideFlags: 0
@@ -2006,6 +2006,50 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 962996e23ffcbc44d92fb20cd03940cd, type: 3}
+--- !u!1 &1072515738
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1072515740}
+  - component: {fileID: 1072515739}
+  m_Layer: 0
+  m_Name: TargetRegistry
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &1072515739
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1072515738}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2aad77ca05ee88f43884d4b8074d2a4d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!4 &1072515740
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1072515738}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 1.0444431, y: -7.9062824, z: 0.2966678}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1138288365
 GameObject:
   m_ObjectHideFlags: 0
@@ -2143,8 +2187,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2279507784ca88949b8829073aea69a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _enemyPrefab: {fileID: 5164892246886874003, guid: ba994c2461a7e724aab062ddf916b738, type: 3}
+  _enemyPrefab: {fileID: 8271144010008013615, guid: ba994c2461a7e724aab062ddf916b738, type: 3}
   _spawnCooldown: 5
+  _targetHeroPrefab: {fileID: 1344771172809719591, guid: 9c6643abad371ba42be6ac8f6b014544, type: 3}
 --- !u!1001 &1165024086
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -3004,14 +3049,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _poolConfigs:
-  - prefab: {fileID: 5164892246886874003, guid: ba994c2461a7e724aab062ddf916b738, type: 3}
-    poolSize: 8
-  - prefab: {fileID: 3272032449331055065, guid: 5cd04baedc4402645841fcfd2a1b9db7, type: 3}
-    poolSize: 8
-  - prefab: {fileID: 6105909672827971442, guid: 01894347c2a01da49a84a54709d8391b, type: 3}
-    poolSize: 8
-  - prefab: {fileID: 4274450774870149262, guid: a13d3d43044ad4b4c97e8583a2bd1297, type: 3}
-    poolSize: 8
+  - Prefab: {fileID: 8271144010008013615, guid: ba994c2461a7e724aab062ddf916b738, type: 3}
+    PoolSize: 10
+  - Prefab: {fileID: 452676536360846962, guid: 5cd04baedc4402645841fcfd2a1b9db7, type: 3}
+    PoolSize: 10
+  - Prefab: {fileID: 1676780521108804834, guid: a13d3d43044ad4b4c97e8583a2bd1297, type: 3}
+    PoolSize: 10
+  - Prefab: {fileID: 745313790418731985, guid: 01894347c2a01da49a84a54709d8391b, type: 3}
+    PoolSize: 10
   _poolContainer: {fileID: 1907003366}
   _maxTotalEnemies: 20
 --- !u!114 &1907003365
@@ -3093,8 +3138,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2279507784ca88949b8829073aea69a4, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _enemyPrefab: {fileID: 6105909672827971442, guid: 01894347c2a01da49a84a54709d8391b, type: 3}
+  _enemyPrefab: {fileID: 745313790418731985, guid: 01894347c2a01da49a84a54709d8391b, type: 3}
   _spawnCooldown: 3
+  _targetHeroPrefab: {fileID: 1344771172809719591, guid: 4996d348c3f3b8f4f9b5e8a41e1587ec, type: 3}
 --- !u!1 &1922390236
 GameObject:
   m_ObjectHideFlags: 0
@@ -3303,3 +3349,4 @@ SceneRoots:
   - {fileID: 1558782270}
   - {fileID: 57262463}
   - {fileID: 749138435}
+  - {fileID: 1072515740}

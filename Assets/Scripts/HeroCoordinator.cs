@@ -7,7 +7,7 @@ public class HeroCoordinator : MonoBehaviour
     [System.Serializable]
     public class HeroConfig
     {
-        public GameObject HeroPrefab;
+        public Hero HeroPrefab;
         public Transform SpawnPoint;
         public List<Transform> PatrolRoute;
         public GameObject RespawnEffect;
@@ -40,12 +40,12 @@ public class HeroCoordinator : MonoBehaviour
                 StopCoroutine(_respawnCoroutines[hero]);
             }
 
-            Coroutine respawnCoroutine = StartCoroutine(RespawnHeroCoroutine(config, hero));
+            Coroutine respawnCoroutine = StartCoroutine(ExecuteRespawnProcess(config, hero));
             _respawnCoroutines[hero] = respawnCoroutine;
         }
     }
 
-    public void RegisterHero(GameObject hero, GameObject prefab)
+    public void RegisterHero(GameObject hero, Hero prefab)
     {
         foreach (var config in _heroConfigs)
         {
@@ -53,13 +53,13 @@ public class HeroCoordinator : MonoBehaviour
             {
                 _heroToConfigMap[hero] = config;
                 SetupHero(hero, config);
-                NotifyEnemiesAboutNewHero(hero, prefab);
+                NotifyEnemiesAboutNewHero(hero);
                 return;
             }
         }
     }
 
-    private void NotifyEnemiesAboutNewHero(GameObject hero, GameObject prefab)
+    private void NotifyEnemiesAboutNewHero(GameObject hero)
     {
         Enemy[] allEnemies = FindObjectsOfType<Enemy>();
         foreach (Enemy enemy in allEnemies)
@@ -92,7 +92,7 @@ public class HeroCoordinator : MonoBehaviour
         }
     }
 
-    private IEnumerator RespawnHeroCoroutine(HeroConfig config, GameObject deadHero)
+    private IEnumerator ExecuteRespawnProcess(HeroConfig config, GameObject deadHero)
     {
         if (config.RespawnEffect != null && config.SpawnPoint != null)
         {

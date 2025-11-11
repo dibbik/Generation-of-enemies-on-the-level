@@ -6,8 +6,8 @@ public class EnemyPool : MonoBehaviour
     [System.Serializable]
     public class PoolConfig
     {
-        public GameObject prefab;
-        public int poolSize = 10;
+        public Enemy Prefab;
+        public int PoolSize = 10;
     }
 
     [Header("Настройки пула")]
@@ -15,8 +15,8 @@ public class EnemyPool : MonoBehaviour
     [SerializeField] private Transform _poolContainer;
     [SerializeField] private int _maxTotalEnemies = 30;
 
-    private Dictionary<GameObject, Queue<GameObject>> _pools = new Dictionary<GameObject, Queue<GameObject>>();
-    private Dictionary<GameObject, GameObject> _prefabToPoolMap = new Dictionary<GameObject, GameObject>();
+    private Dictionary<Enemy, Queue<GameObject>> _pools = new Dictionary<Enemy, Queue<GameObject>>();
+    private Dictionary<GameObject, Enemy> _prefabToPoolMap = new Dictionary<GameObject, Enemy>();
     private int _totalSpawnedCount;
 
     private void Awake()
@@ -24,7 +24,7 @@ public class EnemyPool : MonoBehaviour
         InitializePools();
     }
 
-    public GameObject GetEnemy(GameObject prefab, Vector3 position, Quaternion rotation)
+    public GameObject GetEnemy(Enemy prefab, Vector3 position, Quaternion rotation)
     {
         if (_totalSpawnedCount >= _maxTotalEnemies) 
             return null;
@@ -52,8 +52,7 @@ public class EnemyPool : MonoBehaviour
 
             _totalSpawnedCount++;
 
-            HealthSystem health = enemy.GetComponent<HealthSystem>();
-            if (health != null)
+            if (enemy.TryGetComponent(out HealthSystem health))
             {
                 health.TakeDamage(-health.MaxHealth);
             }
@@ -62,12 +61,22 @@ public class EnemyPool : MonoBehaviour
         return enemy;
     }
 
+    public GameObject GetEnemy(GameObject prefab, Vector3 position, Quaternion rotation)
+    {
+        if (prefab != null && prefab.TryGetComponent(out Enemy enemyComponent))
+        {
+            return GetEnemy(enemyComponent, position, rotation);
+        }
+
+        return null;
+    }
+
     public void ReturnEnemy(GameObject enemy)
     {
         if (enemy == null) 
             return;
 
-        GameObject prefab = GetPrefabForEnemy(enemy);
+        Enemy prefab = GetPrefabForEnemy(enemy);
         if (prefab != null && _pools.ContainsKey(prefab))
         {
             enemy.SetActive(false);
@@ -89,34 +98,34 @@ public class EnemyPool : MonoBehaviour
     {
         foreach (var config in _poolConfigs)
         {
-            if (config.prefab != null)
+            if (config.Prefab != null)
             {
                 var queue = new Queue<GameObject>();
 
-                for (int i = 0; i < config.poolSize; i++)
+                for (int i = 0; i < config.PoolSize; i++)
                 {
-                    GameObject enemy = CreateEnemy(config.prefab);
+                    GameObject enemy = CreateEnemy(config.Prefab);
                     queue.Enqueue(enemy);
                 }
 
-                _pools[config.prefab] = queue;
+                _pools[config.Prefab] = queue;
             }
         }
     }
 
-    private GameObject CreateEnemy(GameObject prefab)
+    private GameObject CreateEnemy(Enemy prefab)
     {
         if (prefab == null) 
             return null;
 
-        GameObject enemy = Instantiate(prefab, _poolContainer);
+        GameObject enemy = Instantiate(prefab.gameObject, _poolContainer);
         enemy.SetActive(false);
         _prefabToPoolMap[enemy] = prefab;
 
         return enemy;
     }
 
-    private GameObject GetPrefabForEnemy(GameObject enemy)
+    private Enemy GetPrefabForEnemy(GameObject enemy)
     {
         return _prefabToPoolMap.ContainsKey(enemy) ? _prefabToPoolMap[enemy] : null;
     }

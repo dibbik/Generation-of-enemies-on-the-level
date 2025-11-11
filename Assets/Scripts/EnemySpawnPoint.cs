@@ -2,14 +2,14 @@ using UnityEngine;
 
 public class EnemySpawnPoint : MonoBehaviour
 {
-    [SerializeField] private GameObject _enemyPrefab;
+    [SerializeField] private Enemy _enemyPrefab;
     [SerializeField] private float _spawnCooldown = 3f;
-    [SerializeField] private GameObject _targetHeroPrefab;
+    [SerializeField] private Hero _targetHeroPrefab;
 
-    public GameObject EnemyPrefab => _enemyPrefab;
+    public Enemy EnemyPrefab => _enemyPrefab;
     public Vector3 Position => transform.position;
     public float SpawnCooldown => _spawnCooldown;
-    public GameObject TargetHeroPrefab => _targetHeroPrefab;
+    public Hero TargetHeroPrefab => _targetHeroPrefab;
 
     public Transform FindTargetHero()
     {
@@ -20,7 +20,7 @@ public class EnemySpawnPoint : MonoBehaviour
 
         foreach (Hero hero in heroes)
         {
-            if (IsHeroFromPrefab(hero.gameObject, _targetHeroPrefab))
+            if (IsHeroFromPrefab(hero, _targetHeroPrefab))
             {
                 return hero.transform;
             }
@@ -29,9 +29,9 @@ public class EnemySpawnPoint : MonoBehaviour
         return null;
     }
 
-    private bool IsHeroFromPrefab(GameObject heroInstance, GameObject heroPrefab)
+    private bool IsHeroFromPrefab(Hero heroInstance, Hero heroPrefab)
     {
-        return heroInstance.name.StartsWith(heroPrefab.name);
+        return heroInstance.gameObject.name.StartsWith(heroPrefab.gameObject.name);
     }
 
     private void OnDrawGizmos()

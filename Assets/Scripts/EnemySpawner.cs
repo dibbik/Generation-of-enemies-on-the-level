@@ -44,8 +44,7 @@ public class EnemySpawner : MonoBehaviour
 
         foreach (Enemy enemy in activeEnemies)
         {
-            if (enemy.gameObject.activeInHierarchy &&
-                enemy.TryGetComponent(out HealthSystem health) && health.IsAlive)
+            if (enemy.gameObject.activeInHierarchy && enemy.TryGetComponent(out HealthSystem health) && health.IsAlive)
             {
                 _currentEnemiesCount++;
             }
@@ -55,6 +54,7 @@ public class EnemySpawner : MonoBehaviour
     private void UpdateSpawning()
     {
         _globalSpawnTimer -= Time.deltaTime;
+
         if (_globalSpawnTimer > 0f) 
             return;
 
@@ -88,11 +88,7 @@ public class EnemySpawner : MonoBehaviour
         if (_enemyPool == null) 
             return;
 
-        GameObject enemyObject = _enemyPool.GetEnemy(
-            spawnPoint.EnemyPrefab,
-            spawnPoint.Position,
-            Quaternion.identity
-        );
+        GameObject enemyObject = _enemyPool.GetEnemy(spawnPoint.EnemyPrefab, spawnPoint.Position, Quaternion.identity);
 
         if (enemyObject != null && spawnPoint.TargetHeroPrefab != null)
         {

@@ -6,8 +6,8 @@ public class HeroPool : MonoBehaviour
     [SerializeField] private Transform _poolContainer;
     [SerializeField] private int _initialPoolSize = 2;
 
-    private Dictionary<GameObject, Queue<GameObject>> _pools = new Dictionary<GameObject, Queue<GameObject>>();
-    private Dictionary<GameObject, GameObject> _instanceToPrefabMap = new Dictionary<GameObject, GameObject>();
+    private Dictionary<Hero, Queue<GameObject>> _pools = new Dictionary<Hero, Queue<GameObject>>();
+    private Dictionary<GameObject, Hero> _instanceToPrefabMap = new Dictionary<GameObject, Hero>();
     private HeroCoordinator _heroCoordinator;
 
     private void Awake()
@@ -15,7 +15,7 @@ public class HeroPool : MonoBehaviour
         _heroCoordinator = FindObjectOfType<HeroCoordinator>();
     }
 
-    public GameObject GetHero(GameObject prefab)
+    public GameObject GetHero(Hero prefab)
     {
         if (prefab == null) 
             return null;
@@ -51,7 +51,7 @@ public class HeroPool : MonoBehaviour
         if (hero == null) 
             return;
 
-        GameObject prefab = GetPrefabForHero(hero);
+        Hero prefab = GetPrefabForHero(hero);
 
         if (prefab != null && _pools.ContainsKey(prefab))
         {
@@ -62,7 +62,7 @@ public class HeroPool : MonoBehaviour
         }
     }
 
-    private void InitializePoolForPrefab(GameObject prefab)
+    private void InitializePoolForPrefab(Hero prefab)
     {
         var queue = new Queue<GameObject>();
 
@@ -71,20 +71,28 @@ public class HeroPool : MonoBehaviour
             GameObject hero = CreateHero(prefab);
             queue.Enqueue(hero);
         }
-
         _pools[prefab] = queue;
     }
 
-    private GameObject CreateHero(GameObject prefab)
+    private GameObject CreateHero(Hero prefab)
     {
-        GameObject hero = Instantiate(prefab, _poolContainer);
+        GameObject hero = Instantiate(prefab.gameObject, _poolContainer);
         hero.SetActive(false);
         _instanceToPrefabMap[hero] = prefab;
         return hero;
     }
 
-    private GameObject GetPrefabForHero(GameObject hero)
+    private Hero GetPrefabForHero(GameObject hero)
     {
         return _instanceToPrefabMap.ContainsKey(hero) ? _instanceToPrefabMap[hero] : null;
+    }
+
+    public GameObject GetHero(GameObject prefab)
+    {
+        if (prefab != null && prefab.TryGetComponent(out Hero heroComponent))
+        {
+            return GetHero(heroComponent);
+        }
+        return null;
     }
 }
