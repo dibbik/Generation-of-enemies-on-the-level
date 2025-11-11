@@ -98,6 +98,7 @@ public class EnemyPool : MonoBehaviour
                     GameObject enemy = CreateEnemy(config.prefab);
                     queue.Enqueue(enemy);
                 }
+
                 _pools[config.prefab] = queue;
             }
         }

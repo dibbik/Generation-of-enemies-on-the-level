@@ -8,11 +8,11 @@ public class HeroPool : MonoBehaviour
 
     private Dictionary<GameObject, Queue<GameObject>> _pools = new Dictionary<GameObject, Queue<GameObject>>();
     private Dictionary<GameObject, GameObject> _instanceToPrefabMap = new Dictionary<GameObject, GameObject>();
-    private SpawnHero _spawnHero;
+    private HeroCoordinator _heroCoordinator;
 
     private void Awake()
     {
-        _spawnHero = FindObjectOfType<SpawnHero>();
+        _heroCoordinator = FindObjectOfType<HeroCoordinator>();
     }
 
     public GameObject GetHero(GameObject prefab)
@@ -40,7 +40,7 @@ public class HeroPool : MonoBehaviour
         if (hero != null)
         {
             hero.SetActive(true);
-            _spawnHero?.RegisterNewHero(hero, prefab);
+            _heroCoordinator?.RegisterHero(hero, prefab);
         }
 
         return hero;
@@ -71,6 +71,7 @@ public class HeroPool : MonoBehaviour
             GameObject hero = CreateHero(prefab);
             queue.Enqueue(hero);
         }
+
         _pools[prefab] = queue;
     }
 

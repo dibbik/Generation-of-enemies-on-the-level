@@ -1,37 +1,94 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class TargetFinder : MonoBehaviour
 {
     [SerializeField] private float _detectionRange = 5f;
     [SerializeField] private bool _activeSearch = true;
 
+    private const float TargetUpdateInterval = 0.3f;
+    private const float CacheDuration = 0.5f;
+
+    private float _lastTargetUpdateTime;
+    private float _lastCacheTime;
+    private Transform _cachedTarget;
+    private List<HealthSystem> _potentialTargets = new List<HealthSystem>();
+
+    private void Awake()
+    {
+        // Автоматически регистрируемся в реестре
+        TargetRegistry.Instance?.RegisterFinder(this);
+    }
+
+    private void OnDestroy()
+    {
+        TargetRegistry.Instance?.UnregisterFinder(this);
+    }
+
+    public void RegisterPotentialTarget(HealthSystem target)
+    {
+        if (!_potentialTargets.Contains(target))
+        {
+            _potentialTargets.Add(target);
+            target.DeathEvent += () => UnregisterPotentialTarget(target);
+        }
+    }
+
+    public void UnregisterPotentialTarget(HealthSystem target)
+    {
+        _potentialTargets.Remove(target);
+
+        if (_cachedTarget != null && _cachedTarget.GetComponent<HealthSystem>() == target)
+        {
+            _cachedTarget = null;
+        }
+    }
+
     public Transform FindTarget(System.Type targetType)
     {
-        if (_activeSearch)
+        if (Time.time - _lastCacheTime < CacheDuration &&
+            _cachedTarget != null &&
+            IsTargetValid(_cachedTarget, targetType))
         {
-            return FindNearestTarget(targetType);
+            return _cachedTarget;
         }
-        else
+
+        if (Time.time - _lastTargetUpdateTime >= TargetUpdateInterval)
         {
-            return FindTargetInRange(targetType);
+            _lastTargetUpdateTime = Time.time;
+
+            Transform newTarget = _activeSearch ?
+                FindNearestTarget(targetType) :
+                FindTargetInRange(targetType);
+
+            if (newTarget != null)
+            {
+                _cachedTarget = newTarget;
+                _lastCacheTime = Time.time;
+            }
+            else
+            {
+                _cachedTarget = null;
+            }
         }
+
+        return _cachedTarget;
     }
 
     private Transform FindNearestTarget(System.Type targetType)
     {
-        MonoBehaviour[] targets = FindObjectsOfType(targetType) as MonoBehaviour[];
         Transform nearest = null;
-        float minDistance = float.MaxValue;
+        float minSqrDistance = float.MaxValue;
+        Vector3 myPosition = transform.position;
 
-        foreach (MonoBehaviour target in targets)
+        foreach (var target in _potentialTargets)
         {
-            if (target != null && IsTargetValid(target.transform))
+            if (IsValidTarget(target, targetType))
             {
-                float distance = Vector3.Distance(transform.position, target.transform.position);
-
-                if (distance < minDistance)
+                float sqrDistance = (target.transform.position - myPosition).sqrMagnitude;
+                if (sqrDistance < minSqrDistance)
                 {
-                    minDistance = distance;
+                    minSqrDistance = sqrDistance;
                     nearest = target.transform;
                 }
             }
@@ -42,19 +99,19 @@ public class TargetFinder : MonoBehaviour
 
     private Transform FindTargetInRange(System.Type targetType)
     {
-        MonoBehaviour[] targets = FindObjectsOfType(targetType) as MonoBehaviour[];
         Transform closestInRange = null;
-        float closestDistance = float.MaxValue;
+        float closestSqrDistance = float.MaxValue;
+        float sqrDetectionRange = _detectionRange * _detectionRange;
+        Vector3 myPosition = transform.position;
 
-        foreach (MonoBehaviour target in targets)
+        foreach (var target in _potentialTargets)
         {
-            if (target != null && IsTargetValid(target.transform))
+            if (IsValidTarget(target, targetType))
             {
-                float distance = Vector3.Distance(transform.position, target.transform.position);
-
-                if (distance <= _detectionRange && distance < closestDistance)
+                float sqrDistance = (target.transform.position - myPosition).sqrMagnitude;
+                if (sqrDistance <= sqrDetectionRange && sqrDistance < closestSqrDistance)
                 {
-                    closestDistance = distance;
+                    closestSqrDistance = sqrDistance;
                     closestInRange = target.transform;
                 }
             }
@@ -63,12 +120,30 @@ public class TargetFinder : MonoBehaviour
         return closestInRange;
     }
 
-    private bool IsTargetValid(Transform target)
+    private bool IsValidTarget(HealthSystem target, System.Type targetType)
     {
-        if (target == null) 
-            return false;
+        return target != null &&
+               target.IsAlive &&
+               target.GetComponent(targetType) != null;
+    }
 
-        HealthSystem targetHealth = target.GetComponent<HealthSystem>();
-        return targetHealth != null && targetHealth.IsAlive;
+    private bool IsTargetValid(Transform target, System.Type targetType)
+    {
+        if (target == null) return false;
+
+        return target.TryGetComponent(out HealthSystem health) &&
+               health.IsAlive &&
+               target.GetComponent(targetType) != null;
+    }
+
+    public void ClearCache()
+    {
+        _cachedTarget = null;
+        _lastCacheTime = 0f;
+    }
+
+    public Transform GetCachedTarget()
+    {
+        return _cachedTarget;
     }
 }

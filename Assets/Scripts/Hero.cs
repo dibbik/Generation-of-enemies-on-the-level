@@ -11,62 +11,76 @@ public class Hero : MonoBehaviour
     [SerializeField] private List<Transform> _patrolPoints = new List<Transform>();
     [SerializeField] private float _reachDistance = 0.5f;
 
-    private CharacterMovement _movement;
-    private HealthSystem _health;
-    private AttackSystem _attack;
+    private CharacterMovement _characterMovement;
+    private HealthSystem _healthSystem;
+    private AttackSystem _attackSystem;
     private TargetFinder _targetFinder;
-    private SpawnHero _spawnHero;
+    private HeroCoordinator _heroCoordinator;
     private Transform _currentPatrolTarget;
     private Transform _attackTarget;
     private int _currentPatrolIndex;
+    private float _lastTargetCheckTime;
+    private const float TargetCheckInterval = 0.5f;
 
     private void Awake()
     {
-        _movement = GetComponent<CharacterMovement>();
-        _health = GetComponent<HealthSystem>();
-        _attack = GetComponent<AttackSystem>();
+        _characterMovement = GetComponent<CharacterMovement>();
+        _healthSystem = GetComponent<HealthSystem>();
+        _attackSystem = GetComponent<AttackSystem>();
         _targetFinder = GetComponent<TargetFinder>();
-        _spawnHero = FindObjectOfType<SpawnHero>();
+        _heroCoordinator = FindObjectOfType<HeroCoordinator>();
 
-        _health.DeathEvent += HandleDeath;
+        _healthSystem.DeathEvent += HandleDeath;
+
+        if (TryGetComponent(out HealthSystem health))
+        {
+            TargetRegistry.Instance?.RegisterTarget(health);
+        }
     }
 
     private void Update()
     {
-        if (!_health.IsAlive) 
+        if (!_healthSystem.IsAlive) 
             return;
 
         if (_patrolPoints.Count == 0 || _currentPatrolTarget == null)
         {
-            _movement.StopMovement();
+            _characterMovement.StopMovement();
+            _attackSystem.StopAttack();
             return;
         }
 
-        CheckForEnemies();
+        if (Time.time - _lastTargetCheckTime >= TargetCheckInterval)
+        {
+            CheckForEnemies();
+            _lastTargetCheckTime = Time.time;
+        }
 
         if (_attackTarget != null)
         {
-            float distanceToEnemy = Vector3.Distance(transform.position, _attackTarget.position);
+            float sqrDistanceToEnemy = (_attackTarget.position - transform.position).sqrMagnitude;
+            float sqrAttackRange = _attackSystem.AttackRange * _attackSystem.AttackRange;
 
-            if (distanceToEnemy <= _attack.AttackRange)
+            if (sqrDistanceToEnemy <= sqrAttackRange)
             {
                 AttackBehavior();
             }
             else
             {
+                _attackSystem.StopAttack();
                 MoveToPatrolPoint();
             }
         }
         else
         {
-            _attack.StopAttack();
+            _attackSystem.StopAttack();
             MoveToPatrolPoint();
         }
     }
 
     public void SetPatrolRoute(List<Transform> patrolRoute)
     {
-        if (patrolRoute == null || patrolRoute.Count == 0)
+        if (patrolRoute == null || patrolRoute.Count == 0) 
             return;
 
         _patrolPoints = new List<Transform>(patrolRoute);
@@ -77,9 +91,12 @@ public class Hero : MonoBehaviour
     private void MoveToPatrolPoint()
     {
         Vector3 direction = (_currentPatrolTarget.position - transform.position).normalized;
-        _movement.SetMovementDirection(direction);
+        _characterMovement.SetMovementDirection(direction);
 
-        if (Vector3.Distance(transform.position, _currentPatrolTarget.position) <= _reachDistance)
+        float sqrDistance = (_currentPatrolTarget.position - transform.position).sqrMagnitude;
+        float sqrReachDistance = _reachDistance * _reachDistance;
+
+        if (sqrDistance <= sqrReachDistance)
         {
             SetNextPatrolPoint();
         }
@@ -95,28 +112,34 @@ public class Hero : MonoBehaviour
         if (_patrolPoints.Count == 0) 
             return;
 
-        _currentPatrolIndex = (_currentPatrolIndex + 1) % _patrolPoints.Count;
+        _currentPatrolIndex++;
+        if (_currentPatrolIndex >= _patrolPoints.Count)
+        {
+            _currentPatrolIndex = 0;
+        }
         _currentPatrolTarget = _patrolPoints[_currentPatrolIndex];
     }
 
     private void AttackBehavior()
     {
-        _attack.StartAttack();
-        _movement.StopMovement();
+        _attackSystem.StartAttack();
+        _characterMovement.StopMovement();
 
         if (_attackTarget != null)
         {
             Vector3 directionToEnemy = (_attackTarget.position - transform.position).normalized;
             directionToEnemy.y = 0;
-            _movement.SetForcedRotation(directionToEnemy);
+            _characterMovement.SetForcedRotation(directionToEnemy);
         }
 
-        HealthSystem enemyHealth = _attackTarget.GetComponent<HealthSystem>();
-        _attack.PerformAttack(enemyHealth);
+        if (_attackTarget.TryGetComponent(out HealthSystem enemyHealth))
+        {
+            _attackSystem.PerformAttack(enemyHealth);
+        }
     }
 
     private void HandleDeath()
     {
-        _spawnHero?.HeroDeath(gameObject);
+        _heroCoordinator?.HandleHeroDeath(gameObject);
     }
 }

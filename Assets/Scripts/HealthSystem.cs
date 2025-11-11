@@ -6,7 +6,6 @@ public class HealthSystem : MonoBehaviour
     public event Action DeathEvent;
 
     [SerializeField] private int _maxHealth = 30;
-
     private int _currentHealth;
 
     public int CurrentHealth => _currentHealth;
@@ -20,11 +19,10 @@ public class HealthSystem : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
-        if (!IsAlive) 
+        if (!IsAlive)
             return;
 
-        _currentHealth -= damage;
-        _currentHealth = Mathf.Max(0, _currentHealth);
+        _currentHealth = Mathf.Max(0, _currentHealth - damage);
 
         if (_currentHealth <= 0)
         {
@@ -34,8 +32,7 @@ public class HealthSystem : MonoBehaviour
 
     public void Heal(int healAmount)
     {
-        _currentHealth += healAmount;
-        _currentHealth = Mathf.Min(_currentHealth, _maxHealth);
+        _currentHealth = Mathf.Min(_currentHealth + healAmount, _maxHealth);
     }
 
     private void Die()

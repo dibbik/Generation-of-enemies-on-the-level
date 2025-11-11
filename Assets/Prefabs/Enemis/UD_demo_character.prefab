@@ -337,6 +337,8 @@ GameObject:
   - component: {fileID: 6912898184917416032}
   - component: {fileID: 513326315967182462}
   - component: {fileID: 8141135529589693338}
+  - component: {fileID: 5412407952807048471}
+  - component: {fileID: 8628681337502103551}
   m_Layer: 0
   m_Name: UD_demo_character
   m_TagString: Enemy
@@ -464,9 +466,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 13f1df8e5e7eef44ab0e3749808c861b, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _attackRange: 2
-  _attackDamage: 10
-  _attackCooldown: 1
 --- !u!114 &6912898184917416032
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -508,6 +507,35 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _walkParameter: Walk
   _attackParameter: Attack
+--- !u!114 &5412407952807048471
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3272032449331055065}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: bb8bd4d45a1b70943b9089ebbb5191d7, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _attackRange: 2
+  _attackDamage: 10
+  _attackCooldown: 1
+--- !u!114 &8628681337502103551
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3272032449331055065}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 8ce5a60228483f44bbf7850b382201f6, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _detectionRange: 5
+  _activeSearch: 1
 --- !u!1 &3668450918436287096
 GameObject:
   m_ObjectHideFlags: 0

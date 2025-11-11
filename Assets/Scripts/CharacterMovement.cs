@@ -3,20 +3,20 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class CharacterMovement : MonoBehaviour
 {
-    [SerializeField] private float _speed = 3f;
+    [SerializeField] private float _moveSpeed = 3f;
     [SerializeField] private float _rotationSpeed = 10f;
 
-    private Rigidbody _rigidbody;
+    private Rigidbody _characterRigidbody;
     private Vector3 _movementDirection;
     private Vector3 _forcedRotationDirection;
-    private bool _useForcedRotation = false;
+    private bool _useForcedRotation;
 
-    public float Speed => _speed;
+    public float MoveSpeed => _moveSpeed;
     public Vector3 MovementDirection => _movementDirection;
 
     private void Awake()
     {
-        _rigidbody = GetComponent<Rigidbody>();
+        _characterRigidbody = GetComponent<Rigidbody>();
         SetupRigidbody();
     }
 
@@ -35,7 +35,7 @@ public class CharacterMovement : MonoBehaviour
     public void StopMovement()
     {
         _movementDirection = Vector3.zero;
-        _rigidbody.velocity = new Vector3(0, _rigidbody.velocity.y, 0);
+        _characterRigidbody.velocity = new Vector3(0, _characterRigidbody.velocity.y, 0);
     }
 
     public void SetForcedRotation(Vector3 direction)
@@ -49,24 +49,24 @@ public class CharacterMovement : MonoBehaviour
 
     private void SetupRigidbody()
     {
-        _rigidbody.isKinematic = false;
-        _rigidbody.useGravity = true;
-        _rigidbody.freezeRotation = true;
-        _rigidbody.interpolation = RigidbodyInterpolation.Interpolate;
-        _rigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
+        _characterRigidbody.isKinematic = false;
+        _characterRigidbody.useGravity = true;
+        _characterRigidbody.freezeRotation = true;
+        _characterRigidbody.interpolation = RigidbodyInterpolation.Interpolate;
+        _characterRigidbody.constraints = RigidbodyConstraints.FreezeRotationX | RigidbodyConstraints.FreezeRotationZ;
     }
 
     private void Move()
     {
         if (_movementDirection != Vector3.zero)
         {
-            Vector3 velocity = _movementDirection * _speed;
-            velocity.y = _rigidbody.velocity.y;
-            _rigidbody.velocity = velocity;
+            Vector3 velocity = _movementDirection * _moveSpeed;
+            velocity.y = _characterRigidbody.velocity.y;
+            _characterRigidbody.velocity = velocity;
         }
         else
         {
-            _rigidbody.velocity = new Vector3(0, _rigidbody.velocity.y, 0);
+            _characterRigidbody.velocity = new Vector3(0, _characterRigidbody.velocity.y, 0);
         }
     }
 

@@ -1290,10 +1290,10 @@ GameObject:
   - component: {fileID: 2317000596583292621}
   - component: {fileID: 1344771172809719591}
   - component: {fileID: 4021985826946460936}
-  - component: {fileID: 2228097624351774991}
-  - component: {fileID: 6672193315811358208}
+  - component: {fileID: 7671992234149217795}
+  - component: {fileID: 1122446488350034420}
   m_Layer: 0
-  m_Name: RPGHeroPolyart (1)
+  m_Name: Hero1
   m_TagString: Hero
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -1307,7 +1307,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 5448383786773587477}
   serializedVersion: 2
-  m_LocalRotation: {x: -0, y: 0.9656402, z: -0, w: 0.25988278}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0.1, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
@@ -1315,7 +1315,7 @@ Transform:
   - {fileID: 7716424791752968582}
   - {fileID: 7432685036701748701}
   m_Father: {fileID: 0}
-  m_LocalEulerAnglesHint: {x: 0, y: 149.874, z: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!95 &4674489333064342216
 Animator:
   serializedVersion: 5
@@ -1397,7 +1397,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 001fc9a311596fd4c864f704e9f8e3e1, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _detectionRange: 2
+  _detectionRange: 3
   _attackRange: 2
   _attackDamage: 10
   _attackCooldown: 1
@@ -1421,7 +1421,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _speed: 3
   _rotationSpeed: 10
---- !u!114 &2228097624351774991
+--- !u!114 &7671992234149217795
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -1434,7 +1434,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _maxHealth: 30
---- !u!114 &6672193315811358208
+--- !u!114 &1122446488350034420
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}

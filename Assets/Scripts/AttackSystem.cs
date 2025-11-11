@@ -2,13 +2,15 @@ using UnityEngine;
 
 public class AttackSystem : MonoBehaviour
 {
-    [Header("Настройки атаки")]
+    [Header("Настройка атаки")]
     [SerializeField] private float _attackRange = 2f;
     [SerializeField] private int _attackDamage = 10;
     [SerializeField] private float _attackCooldown = 1f;
+    [SerializeField] private float _attackDuration = 0.1f;
 
     private float _lastAttackTime;
     private bool _isAttacking;
+    private float _attackEndTime;
 
     public float AttackRange => _attackRange;
     public bool IsAttacking => _isAttacking;
@@ -17,6 +19,7 @@ public class AttackSystem : MonoBehaviour
     public void StartAttack()
     {
         _isAttacking = true;
+        _attackEndTime = Time.time + _attackDuration;
     }
 
     public void StopAttack()
@@ -30,6 +33,15 @@ public class AttackSystem : MonoBehaviour
         {
             targetHealth.TakeDamage(_attackDamage);
             _lastAttackTime = Time.time;
+            StartAttack();
+        }
+    }
+
+    private void Update()
+    {
+        if (_isAttacking && Time.time >= _attackEndTime)
+        {
+            StopAttack();
         }
     }
 }
