@@ -14,22 +14,24 @@ public class HeroCoordinator : MonoBehaviour
         public float RespawnDelay = 3f;
     }
 
+    private const float DefaultRespawnDelay = 3f;
+
     [Header("Конфигурация героя")]
     [SerializeField] private List<HeroConfig> _heroConfigs = new List<HeroConfig>();
     [SerializeField] private HeroPool _heroPool;
 
-    private Dictionary<GameObject, HeroConfig> _heroToConfigMap = new Dictionary<GameObject, HeroConfig>();
-    private Dictionary<GameObject, Coroutine> _respawnCoroutines = new Dictionary<GameObject, Coroutine>();
+    private Dictionary<Hero, HeroConfig> _heroToConfigMap = new Dictionary<Hero, HeroConfig>();
+    private Dictionary<Hero, Coroutine> _respawnCoroutines = new Dictionary<Hero, Coroutine>();
 
     private void Start()
     {
-        if (_heroPool == null) 
-            return;
+        if (_heroPool == null)
+            _heroPool = GetComponent<HeroPool>();
 
         SpawnInitialHeroes();
     }
 
-    public void HandleHeroDeath(GameObject hero)
+    public void HandleHeroDeath(Hero hero)
     {
         if (_heroToConfigMap.ContainsKey(hero))
         {
@@ -45,7 +47,7 @@ public class HeroCoordinator : MonoBehaviour
         }
     }
 
-    public void RegisterHero(GameObject hero, Hero prefab)
+    public void RegisterHero(Hero hero, Hero prefab)
     {
         foreach (var config in _heroConfigs)
         {
@@ -59,9 +61,10 @@ public class HeroCoordinator : MonoBehaviour
         }
     }
 
-    private void NotifyEnemiesAboutNewHero(GameObject hero)
+    private void NotifyEnemiesAboutNewHero(Hero hero)
     {
         Enemy[] allEnemies = FindObjectsOfType<Enemy>();
+
         foreach (Enemy enemy in allEnemies)
         {
             if (enemy.gameObject.activeInHierarchy && enemy.IsWaitingForRespawn())
@@ -82,17 +85,7 @@ public class HeroCoordinator : MonoBehaviour
         }
     }
 
-    private void SpawnHero(HeroConfig config)
-    {
-        GameObject hero = _heroPool.GetHero(config.HeroPrefab);
-
-        if (hero != null)
-        {
-            SetupHero(hero, config);
-        }
-    }
-
-    private IEnumerator ExecuteRespawnProcess(HeroConfig config, GameObject deadHero)
+    private IEnumerator ExecuteRespawnProcess(HeroConfig config, Hero deadHero)
     {
         if (config.RespawnEffect != null && config.SpawnPoint != null)
         {
@@ -112,9 +105,19 @@ public class HeroCoordinator : MonoBehaviour
         _respawnCoroutines.Remove(deadHero);
     }
 
-    private void SetupHero(GameObject hero, HeroConfig config)
+    private void SpawnHero(HeroConfig config)
     {
-        if (config.SpawnPoint == null) 
+        Hero hero = _heroPool.GetHero(config.HeroPrefab);
+
+        if (hero != null)
+        {
+            SetupHero(hero, config);
+        }
+    }
+
+    private void SetupHero(Hero hero, HeroConfig config)
+    {
+        if (config.SpawnPoint == null)
             return;
 
         hero.transform.position = config.SpawnPoint.position;
@@ -126,9 +129,9 @@ public class HeroCoordinator : MonoBehaviour
             heroRigidbody.angularVelocity = Vector3.zero;
         }
 
-        if (hero.TryGetComponent(out Hero heroComponent) && config.PatrolRoute != null && config.PatrolRoute.Count > 0)
+        if (config.PatrolRoute != null && config.PatrolRoute.Count > 0)
         {
-            heroComponent.SetPatrolRoute(config.PatrolRoute);
+            hero.SetPatrolRoute(config.PatrolRoute);
         }
 
         if (hero.TryGetComponent(out HealthSystem health))

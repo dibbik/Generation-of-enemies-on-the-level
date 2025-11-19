@@ -1,12 +1,13 @@
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
+[RequireComponent(typeof(RotationController))]
 public class CharacterMovement : MonoBehaviour
 {
     [SerializeField] private float _moveSpeed = 3f;
-    [SerializeField] private float _rotationSpeed = 10f;
 
     private Rigidbody _characterRigidbody;
+    private RotationController _rotationController;
     private Vector3 _movementDirection;
     private Vector3 _forcedRotationDirection;
     private bool _useForcedRotation;
@@ -17,6 +18,7 @@ public class CharacterMovement : MonoBehaviour
     private void Awake()
     {
         _characterRigidbody = GetComponent<Rigidbody>();
+        _rotationController = GetComponent<RotationController>();
         SetupRigidbody();
     }
 
@@ -72,12 +74,6 @@ public class CharacterMovement : MonoBehaviour
 
     private void Rotate()
     {
-        Vector3 rotationDirection = _useForcedRotation ? _forcedRotationDirection : _movementDirection;
-
-        if (rotationDirection != Vector3.zero)
-        {
-            Quaternion targetRotation = Quaternion.LookRotation(rotationDirection);
-            transform.rotation = Quaternion.Slerp(transform.rotation, targetRotation, _rotationSpeed * Time.deltaTime);
-        }
+        _rotationController.UpdateRotation(_movementDirection, _forcedRotationDirection, _useForcedRotation);
     }
 }

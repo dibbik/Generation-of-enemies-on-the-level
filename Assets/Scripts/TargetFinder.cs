@@ -3,11 +3,11 @@ using System.Collections.Generic;
 
 public class TargetFinder : MonoBehaviour
 {
-    [SerializeField] private float _detectionRange = 5f;
-    [SerializeField] private bool _activeSearch = true;
-
     private const float TargetUpdateInterval = 0.3f;
     private const float CacheDuration = 0.5f;
+
+    [SerializeField] private float _detectionRange = 5f;
+    [SerializeField] private bool _activeSearch = true;
 
     private float _lastTargetUpdateTime;
     private float _lastCacheTime;
@@ -16,7 +16,6 @@ public class TargetFinder : MonoBehaviour
 
     private void Awake()
     {
-        // Автоматически регистрируемся в реестре
         TargetRegistry.Instance?.RegisterFinder(this);
     }
 
@@ -46,9 +45,8 @@ public class TargetFinder : MonoBehaviour
 
     public Transform FindTarget(System.Type targetType)
     {
-        if (Time.time - _lastCacheTime < CacheDuration &&
-            _cachedTarget != null &&
-            IsTargetValid(_cachedTarget, targetType))
+        if (Time.time - _lastCacheTime < CacheDuration && _cachedTarget != null
+            && IsTargetValid(_cachedTarget, targetType))
         {
             return _cachedTarget;
         }
@@ -129,11 +127,11 @@ public class TargetFinder : MonoBehaviour
 
     private bool IsTargetValid(Transform target, System.Type targetType)
     {
-        if (target == null) return false;
+        if (target == null)
+            return false;
 
         return target.TryGetComponent(out HealthSystem health) &&
-               health.IsAlive &&
-               target.GetComponent(targetType) != null;
+               health.IsAlive && target.GetComponent(targetType) != null;
     }
 
     public void ClearCache()

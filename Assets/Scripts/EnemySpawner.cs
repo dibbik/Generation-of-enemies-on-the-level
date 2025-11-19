@@ -55,15 +55,15 @@ public class EnemySpawner : MonoBehaviour
     {
         _globalSpawnTimer -= Time.deltaTime;
 
-        if (_globalSpawnTimer > 0f) 
+        if (_globalSpawnTimer > 0f)
             return;
 
-        if (_currentEnemiesCount >= _maxEnemiesOnMap) 
+        if (_currentEnemiesCount >= _maxEnemiesOnMap)
             return;
 
         foreach (var spawnPoint in _spawnPoints)
         {
-            if (spawnPoint == null || spawnPoint.EnemyPrefab == null) 
+            if (spawnPoint == null || spawnPoint.EnemyPrefab == null)
                 continue;
 
             if (!_spawnTimers.ContainsKey(spawnPoint))
@@ -85,20 +85,18 @@ public class EnemySpawner : MonoBehaviour
 
     private void SpawnEnemy(EnemySpawnPoint spawnPoint)
     {
-        if (_enemyPool == null) 
+        if (_enemyPool == null)
             return;
 
-        GameObject enemyObject = _enemyPool.GetEnemy(spawnPoint.EnemyPrefab, spawnPoint.Position, Quaternion.identity);
+        Enemy enemy = _enemyPool.GetEnemy(spawnPoint.EnemyPrefab, spawnPoint.Position, Quaternion.identity);
 
-        if (enemyObject != null && spawnPoint.TargetHeroPrefab != null)
+        if (enemy != null && spawnPoint.TargetHeroPrefab != null)
         {
-            if (enemyObject.TryGetComponent(out Enemy enemy))
+            Transform hero = spawnPoint.FindTargetHero();
+
+            if (hero != null)
             {
-                Transform hero = spawnPoint.FindTargetHero();
-                if (hero != null)
-                {
-                    enemy.SetForcedTarget(hero);
-                }
+                enemy.SetForcedTarget(hero);
             }
         }
     }

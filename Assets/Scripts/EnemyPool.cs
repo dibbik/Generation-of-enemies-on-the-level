@@ -10,13 +10,15 @@ public class EnemyPool : MonoBehaviour
         public int PoolSize = 10;
     }
 
+    private const int DefaultMaxTotalEnemies = 30;
+
     [Header("Настройки пула")]
     [SerializeField] private List<PoolConfig> _poolConfigs = new List<PoolConfig>();
     [SerializeField] private Transform _poolContainer;
-    [SerializeField] private int _maxTotalEnemies = 30;
+    [SerializeField] private int _maxTotalEnemies = DefaultMaxTotalEnemies;
 
-    private Dictionary<Enemy, Queue<GameObject>> _pools = new Dictionary<Enemy, Queue<GameObject>>();
-    private Dictionary<GameObject, Enemy> _prefabToPoolMap = new Dictionary<GameObject, Enemy>();
+    private Dictionary<Enemy, Queue<Enemy>> _pools = new Dictionary<Enemy, Queue<Enemy>>();
+    private Dictionary<Enemy, Enemy> _prefabToPoolMap = new Dictionary<Enemy, Enemy>();
     private int _totalSpawnedCount;
 
     private void Awake()
@@ -24,16 +26,16 @@ public class EnemyPool : MonoBehaviour
         InitializePools();
     }
 
-    public GameObject GetEnemy(Enemy prefab, Vector3 position, Quaternion rotation)
+    public Enemy GetEnemy(Enemy prefab, Vector3 position, Quaternion rotation)
     {
-        if (_totalSpawnedCount >= _maxTotalEnemies) 
+        if (_totalSpawnedCount >= _maxTotalEnemies)
             return null;
 
-        if (!_pools.ContainsKey(prefab)) 
+        if (!_pools.ContainsKey(prefab))
             return null;
 
         var pool = _pools[prefab];
-        GameObject enemy;
+        Enemy enemy;
 
         if (pool.Count > 0)
         {
@@ -48,7 +50,7 @@ public class EnemyPool : MonoBehaviour
         {
             enemy.transform.position = position;
             enemy.transform.rotation = rotation;
-            enemy.SetActive(true);
+            enemy.gameObject.SetActive(true);
 
             _totalSpawnedCount++;
 
@@ -61,25 +63,16 @@ public class EnemyPool : MonoBehaviour
         return enemy;
     }
 
-    public GameObject GetEnemy(GameObject prefab, Vector3 position, Quaternion rotation)
+    public void ReturnEnemy(Enemy enemy)
     {
-        if (prefab != null && prefab.TryGetComponent(out Enemy enemyComponent))
-        {
-            return GetEnemy(enemyComponent, position, rotation);
-        }
-
-        return null;
-    }
-
-    public void ReturnEnemy(GameObject enemy)
-    {
-        if (enemy == null) 
+        if (enemy == null)
             return;
 
         Enemy prefab = GetPrefabForEnemy(enemy);
+
         if (prefab != null && _pools.ContainsKey(prefab))
         {
-            enemy.SetActive(false);
+            enemy.gameObject.SetActive(false);
 
             if (_poolContainer != null)
             {
@@ -90,7 +83,7 @@ public class EnemyPool : MonoBehaviour
         }
         else
         {
-            Destroy(enemy);
+            Destroy(enemy.gameObject);
         }
     }
 
@@ -100,11 +93,11 @@ public class EnemyPool : MonoBehaviour
         {
             if (config.Prefab != null)
             {
-                var queue = new Queue<GameObject>();
+                var queue = new Queue<Enemy>();
 
                 for (int i = 0; i < config.PoolSize; i++)
                 {
-                    GameObject enemy = CreateEnemy(config.Prefab);
+                    Enemy enemy = CreateEnemy(config.Prefab);
                     queue.Enqueue(enemy);
                 }
 
@@ -113,19 +106,19 @@ public class EnemyPool : MonoBehaviour
         }
     }
 
-    private GameObject CreateEnemy(Enemy prefab)
+    private Enemy CreateEnemy(Enemy prefab)
     {
-        if (prefab == null) 
+        if (prefab == null)
             return null;
 
-        GameObject enemy = Instantiate(prefab.gameObject, _poolContainer);
-        enemy.SetActive(false);
+        Enemy enemy = Instantiate(prefab, _poolContainer);
+        enemy.gameObject.SetActive(false);
         _prefabToPoolMap[enemy] = prefab;
 
         return enemy;
     }
 
-    private Enemy GetPrefabForEnemy(GameObject enemy)
+    private Enemy GetPrefabForEnemy(Enemy enemy)
     {
         return _prefabToPoolMap.ContainsKey(enemy) ? _prefabToPoolMap[enemy] : null;
     }

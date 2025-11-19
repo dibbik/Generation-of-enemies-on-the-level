@@ -4,25 +4,21 @@
 [RequireComponent(typeof(HealthSystem))]
 [RequireComponent(typeof(AttackSystem))]
 [RequireComponent(typeof(TargetFinder))]
+[RequireComponent(typeof(CharacterAnimation))]
 public class Enemy : MonoBehaviour
 {
+    private const float RespawnCheckInterval = 1f;
+
     private CharacterMovement _characterMovement;
     private HealthSystem _healthSystem;
     private AttackSystem _attackSystem;
     private TargetFinder _targetFinder;
+    private CharacterAnimation _characterAnimation;
     private EnemyPool _enemyPool;
     private Transform _target;
     private Transform _forcedTarget;
     private bool _waitingForRespawn;
     private float _lastRespawnCheckTime;
-    private const float RespawnCheckInterval = 1f;
-
-    public void SetForcedTarget(Transform target)
-    {
-        _forcedTarget = target;
-        _waitingForRespawn = false;
-        _target = _forcedTarget;
-    }
 
     private void Awake()
     {
@@ -30,6 +26,7 @@ public class Enemy : MonoBehaviour
         _healthSystem = GetComponent<HealthSystem>();
         _attackSystem = GetComponent<AttackSystem>();
         _targetFinder = GetComponent<TargetFinder>();
+        _characterAnimation = GetComponent<CharacterAnimation>();
         TryGetComponent(out _enemyPool);
 
         _healthSystem.DeathEvent += HandleDeath;
@@ -42,7 +39,7 @@ public class Enemy : MonoBehaviour
 
     private void Update()
     {
-        if (!_healthSystem.IsAlive) 
+        if (!_healthSystem.IsAlive)
             return;
 
         if (_forcedTarget != null)
@@ -57,6 +54,7 @@ public class Enemy : MonoBehaviour
                 _target = null;
                 _waitingForRespawn = true;
                 WaitForRespawn();
+                UpdateAnimations();
                 return;
             }
         }
@@ -68,6 +66,7 @@ public class Enemy : MonoBehaviour
         if (_target == null)
         {
             _characterMovement.StopMovement();
+            UpdateAnimations();
             return;
         }
 
@@ -82,6 +81,30 @@ public class Enemy : MonoBehaviour
         {
             ChaseBehavior();
         }
+
+        UpdateAnimations();
+    }
+
+    public void SetForcedTarget(Transform target)
+    {
+        _forcedTarget = target;
+        _waitingForRespawn = false;
+        _target = _forcedTarget;
+    }
+
+    public void UpdateForcedTarget(Transform newTarget)
+    {
+        if (newTarget != null)
+        {
+            _forcedTarget = newTarget;
+            _waitingForRespawn = false;
+            _target = _forcedTarget;
+        }
+    }
+
+    public bool IsWaitingForRespawn()
+    {
+        return _waitingForRespawn;
     }
 
     private void WaitForRespawn()
@@ -116,16 +139,6 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    private bool IsHeroFromSamePrefab(GameObject hero1, GameObject hero2)
-    {
-        return hero1.name.Split('(')[0] == hero2.name.Split('(')[0];
-    }
-
-    private void HandleDeath()
-    {
-        _enemyPool?.ReturnEnemy(gameObject);
-    }
-
     private void ChaseBehavior()
     {
         _attackSystem.StopAttack();
@@ -147,26 +160,30 @@ public class Enemy : MonoBehaviour
         }
     }
 
+    private void UpdateAnimations()
+    {
+        bool isMoving = _characterMovement.MovementDirection != Vector3.zero;
+        bool isAttacking = _attackSystem.IsAttacking;
+
+        _characterAnimation.SetMoving(isMoving && !isAttacking);
+        _characterAnimation.SetAttacking(isAttacking);
+    }
+
+    private void HandleDeath()
+    {
+        _enemyPool?.ReturnEnemy(this);
+    }
+
     private bool IsTargetValid(Transform target)
     {
-        if (target == null) 
+        if (target == null)
             return false;
 
         return target.TryGetComponent(out HealthSystem targetHealth) && targetHealth.IsAlive;
     }
 
-    public void UpdateForcedTarget(Transform newTarget)
+    private bool IsHeroFromSamePrefab(GameObject hero1, GameObject hero2)
     {
-        if (newTarget != null)
-        {
-            _forcedTarget = newTarget;
-            _waitingForRespawn = false;
-            _target = _forcedTarget;
-        }
-    }
-
-    public bool IsWaitingForRespawn()
-    {
-        return _waitingForRespawn;
+        return hero1.name.Split('(')[0] == hero2.name.Split('(')[0];
     }
 }

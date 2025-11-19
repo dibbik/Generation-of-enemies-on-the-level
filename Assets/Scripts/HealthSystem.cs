@@ -3,9 +3,10 @@ using System;
 
 public class HealthSystem : MonoBehaviour
 {
+    [SerializeField] private int _maxHealth = 30;
+
     public event Action DeathEvent;
 
-    [SerializeField] private int _maxHealth = 30;
     private int _currentHealth;
 
     public int CurrentHealth => _currentHealth;
@@ -13,6 +14,11 @@ public class HealthSystem : MonoBehaviour
     public bool IsAlive => _currentHealth > 0;
 
     private void Awake()
+    {
+        _currentHealth = _maxHealth;
+    }
+
+    private void OnEnable()
     {
         _currentHealth = _maxHealth;
     }
@@ -39,10 +45,5 @@ public class HealthSystem : MonoBehaviour
     {
         DeathEvent?.Invoke();
         gameObject.SetActive(false);
-    }
-
-    private void OnEnable()
-    {
-        _currentHealth = _maxHealth;
     }
 }

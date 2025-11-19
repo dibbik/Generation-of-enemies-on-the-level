@@ -5,8 +5,11 @@ using System.Collections.Generic;
 [RequireComponent(typeof(HealthSystem))]
 [RequireComponent(typeof(AttackSystem))]
 [RequireComponent(typeof(TargetFinder))]
+[RequireComponent(typeof(CharacterAnimation))]
 public class Hero : MonoBehaviour
 {
+    private const float TargetCheckInterval = 0.5f;
+
     [Header("Настройки патрулирования")]
     [SerializeField] private List<Transform> _patrolPoints = new List<Transform>();
     [SerializeField] private float _reachDistance = 0.5f;
@@ -15,12 +18,12 @@ public class Hero : MonoBehaviour
     private HealthSystem _healthSystem;
     private AttackSystem _attackSystem;
     private TargetFinder _targetFinder;
+    private CharacterAnimation _characterAnimation;
     private HeroCoordinator _heroCoordinator;
     private Transform _currentPatrolTarget;
     private Transform _attackTarget;
     private int _currentPatrolIndex;
     private float _lastTargetCheckTime;
-    private const float TargetCheckInterval = 0.5f;
 
     private void Awake()
     {
@@ -28,7 +31,8 @@ public class Hero : MonoBehaviour
         _healthSystem = GetComponent<HealthSystem>();
         _attackSystem = GetComponent<AttackSystem>();
         _targetFinder = GetComponent<TargetFinder>();
-        _heroCoordinator = FindObjectOfType<HeroCoordinator>();
+        _characterAnimation = GetComponent<CharacterAnimation>();
+        _heroCoordinator = GetComponentInParent<HeroCoordinator>();
 
         _healthSystem.DeathEvent += HandleDeath;
 
@@ -40,13 +44,14 @@ public class Hero : MonoBehaviour
 
     private void Update()
     {
-        if (!_healthSystem.IsAlive) 
+        if (!_healthSystem.IsAlive)
             return;
 
         if (_patrolPoints.Count == 0 || _currentPatrolTarget == null)
         {
             _characterMovement.StopMovement();
             _attackSystem.StopAttack();
+            UpdateAnimations();
             return;
         }
 
@@ -76,11 +81,13 @@ public class Hero : MonoBehaviour
             _attackSystem.StopAttack();
             MoveToPatrolPoint();
         }
+
+        UpdateAnimations();
     }
 
     public void SetPatrolRoute(List<Transform> patrolRoute)
     {
-        if (patrolRoute == null || patrolRoute.Count == 0) 
+        if (patrolRoute == null || patrolRoute.Count == 0)
             return;
 
         _patrolPoints = new List<Transform>(patrolRoute);
@@ -109,7 +116,7 @@ public class Hero : MonoBehaviour
 
     private void SetNextPatrolPoint()
     {
-        if (_patrolPoints.Count == 0) 
+        if (_patrolPoints.Count == 0)
             return;
 
         _currentPatrolIndex++;
@@ -138,8 +145,27 @@ public class Hero : MonoBehaviour
         }
     }
 
+    private void UpdateAnimations()
+    {
+        bool isMoving = _characterMovement.MovementDirection != Vector3.zero;
+        bool isAttacking = _attackSystem.IsAttacking;
+
+        _characterAnimation.SetMoving(isMoving && !isAttacking);
+        _characterAnimation.SetAttacking(isAttacking);
+    }
+
     private void HandleDeath()
     {
-        _heroCoordinator?.HandleHeroDeath(gameObject);
+        _heroCoordinator?.HandleHeroDeath(this);
+    }
+
+    public override int GetHashCode()
+    {
+        return gameObject.GetInstanceID();
+    }
+
+    public override bool Equals(object other)
+    {
+        return other is Hero hero && hero.gameObject.GetInstanceID() == gameObject.GetInstanceID();
     }
 }

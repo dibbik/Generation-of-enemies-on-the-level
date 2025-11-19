@@ -13,7 +13,7 @@ public class EnemySpawnPoint : MonoBehaviour
 
     public Transform FindTargetHero()
     {
-        if (_targetHeroPrefab == null) 
+        if (_targetHeroPrefab == null)
             return null;
 
         Hero[] heroes = FindObjectsOfType<Hero>();
