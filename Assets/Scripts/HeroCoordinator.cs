@@ -22,6 +22,7 @@ public class HeroCoordinator : MonoBehaviour
 
     private Dictionary<Hero, HeroConfig> _heroToConfigMap = new Dictionary<Hero, HeroConfig>();
     private Dictionary<Hero, Coroutine> _respawnCoroutines = new Dictionary<Hero, Coroutine>();
+    private List<Enemy> _allEnemies = new List<Enemy>();
 
     private void Start()
     {
@@ -29,6 +30,29 @@ public class HeroCoordinator : MonoBehaviour
             _heroPool = GetComponent<HeroPool>();
 
         SpawnInitialHeroes();
+        CacheAllEnemies();
+    }
+
+    public Hero GetPrefabForHero(Hero heroInstance)
+    {
+        if (_heroToConfigMap.ContainsKey(heroInstance))
+        {
+            return _heroToConfigMap[heroInstance].HeroPrefab;
+        }
+        return null;
+    }
+
+    public void RegisterEnemy(Enemy enemy)
+    {
+        if (!_allEnemies.Contains(enemy))
+        {
+            _allEnemies.Add(enemy);
+        }
+    }
+
+    public void UnregisterEnemy(Enemy enemy)
+    {
+        _allEnemies.Remove(enemy);
     }
 
     public void HandleHeroDeath(Hero hero)
@@ -63,14 +87,31 @@ public class HeroCoordinator : MonoBehaviour
 
     private void NotifyEnemiesAboutNewHero(Hero hero)
     {
-        Enemy[] allEnemies = FindObjectsOfType<Enemy>();
-
-        foreach (Enemy enemy in allEnemies)
+        for (int i = _allEnemies.Count - 1; i >= 0; i--)
         {
+            Enemy enemy = _allEnemies[i];
+            if (enemy == null)
+            {
+                _allEnemies.RemoveAt(i);
+                continue;
+            }
+
             if (enemy.gameObject.activeInHierarchy && enemy.IsWaitingForRespawn())
             {
                 enemy.UpdateForcedTarget(hero.transform);
             }
+        }
+    }
+
+    private void CacheAllEnemies()
+    {
+        Enemy[] enemies = FindObjectsOfType<Enemy>();
+        _allEnemies.Clear();
+        _allEnemies.AddRange(enemies);
+
+        foreach (Enemy enemy in enemies)
+        {
+            RegisterEnemy(enemy);
         }
     }
 

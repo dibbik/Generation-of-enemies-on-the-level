@@ -4,9 +4,6 @@ public class RotationController : MonoBehaviour
 {
     [SerializeField] private float _rotationSpeed = 10f;
 
-    private Vector3 _currentDirection;
-    private bool _useForcedRotation;
-
     public void UpdateRotation(Vector3 movementDirection, Vector3 forcedDirection, bool useForced)
     {
         Vector3 rotationDirection = useForced ? forcedDirection : movementDirection;

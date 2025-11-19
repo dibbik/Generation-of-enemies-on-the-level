@@ -20,7 +20,10 @@ public class EnemySpawnPoint : MonoBehaviour
 
         foreach (Hero hero in heroes)
         {
-            if (IsHeroFromPrefab(hero, _targetHeroPrefab))
+            if (hero.gameObject.activeInHierarchy &&
+                IsHeroFromPrefab(hero, _targetHeroPrefab) &&
+                hero.TryGetComponent(out HealthSystem health) &&
+                health.IsAlive)
             {
                 return hero.transform;
             }
@@ -31,7 +34,8 @@ public class EnemySpawnPoint : MonoBehaviour
 
     private bool IsHeroFromPrefab(Hero heroInstance, Hero heroPrefab)
     {
-        return heroInstance.gameObject.name.StartsWith(heroPrefab.gameObject.name);
+        return heroInstance.GetType() == heroPrefab.GetType() &&
+               heroInstance.gameObject.name.StartsWith(heroPrefab.gameObject.name);
     }
 
     private void OnDrawGizmos()

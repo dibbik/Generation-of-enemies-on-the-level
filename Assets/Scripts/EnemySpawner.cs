@@ -93,11 +93,11 @@ public class EnemySpawner : MonoBehaviour
         if (enemy != null && spawnPoint.TargetHeroPrefab != null)
         {
             Transform hero = spawnPoint.FindTargetHero();
-
             if (hero != null)
             {
-                enemy.SetForcedTarget(hero);
+                enemy.SetForcedTarget(hero, spawnPoint.TargetHeroPrefab);
             }
         }
     }
+
 }

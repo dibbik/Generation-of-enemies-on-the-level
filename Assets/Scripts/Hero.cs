@@ -36,11 +36,17 @@ public class Hero : MonoBehaviour
 
         _healthSystem.DeathEvent += HandleDeath;
 
+        if (_heroCoordinator != null)
+        {
+            HeroRegistry.Instance?.RegisterHero(this, _heroCoordinator.GetPrefabForHero(this));
+        }
+
         if (TryGetComponent(out HealthSystem health))
         {
             TargetRegistry.Instance?.RegisterTarget(health);
         }
     }
+
 
     private void Update()
     {
@@ -120,6 +126,7 @@ public class Hero : MonoBehaviour
             return;
 
         _currentPatrolIndex++;
+
         if (_currentPatrolIndex >= _patrolPoints.Count)
         {
             _currentPatrolIndex = 0;
@@ -168,4 +175,9 @@ public class Hero : MonoBehaviour
     {
         return other is Hero hero && hero.gameObject.GetInstanceID() == gameObject.GetInstanceID();
     }
+    private void OnDestroy()
+    {
+        HeroRegistry.Instance?.UnregisterHero(this);
+    }
+
 }

@@ -15,10 +15,12 @@ public class Enemy : MonoBehaviour
     private TargetFinder _targetFinder;
     private CharacterAnimation _characterAnimation;
     private EnemyPool _enemyPool;
+    private HeroCoordinator _heroCoordinator;
     private Transform _target;
     private Transform _forcedTarget;
     private bool _waitingForRespawn;
     private float _lastRespawnCheckTime;
+    private Hero _targetHeroPrefab;
 
     private void Awake()
     {
@@ -27,13 +29,41 @@ public class Enemy : MonoBehaviour
         _attackSystem = GetComponent<AttackSystem>();
         _targetFinder = GetComponent<TargetFinder>();
         _characterAnimation = GetComponent<CharacterAnimation>();
+        _heroCoordinator = FindObjectOfType<HeroCoordinator>();
         TryGetComponent(out _enemyPool);
 
         _healthSystem.DeathEvent += HandleDeath;
+        _heroCoordinator?.RegisterEnemy(this);
 
         if (TryGetComponent(out HealthSystem health))
         {
             TargetRegistry.Instance?.RegisterTarget(health);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        _heroCoordinator?.UnregisterEnemy(this);
+    }
+
+    public void SetForcedTarget(Transform target, Hero heroPrefab = null)
+    {
+        if (target != null)
+        {
+            _forcedTarget = target;
+            _targetHeroPrefab = heroPrefab;
+            _waitingForRespawn = false;
+            _target = _forcedTarget;
+        }
+    }
+
+    public void UpdateForcedTarget(Transform newTarget)
+    {
+        if (newTarget != null)
+        {
+            _forcedTarget = newTarget;
+            _waitingForRespawn = false;
+            _target = _forcedTarget;
         }
     }
 
@@ -58,10 +88,6 @@ public class Enemy : MonoBehaviour
                 return;
             }
         }
-        else
-        {
-            _target = _targetFinder.FindTarget(typeof(Hero));
-        }
 
         if (_target == null)
         {
@@ -85,28 +111,6 @@ public class Enemy : MonoBehaviour
         UpdateAnimations();
     }
 
-    public void SetForcedTarget(Transform target)
-    {
-        _forcedTarget = target;
-        _waitingForRespawn = false;
-        _target = _forcedTarget;
-    }
-
-    public void UpdateForcedTarget(Transform newTarget)
-    {
-        if (newTarget != null)
-        {
-            _forcedTarget = newTarget;
-            _waitingForRespawn = false;
-            _target = _forcedTarget;
-        }
-    }
-
-    public bool IsWaitingForRespawn()
-    {
-        return _waitingForRespawn;
-    }
-
     private void WaitForRespawn()
     {
         _attackSystem.StopAttack();
@@ -121,14 +125,14 @@ public class Enemy : MonoBehaviour
 
     private void CheckForRespawnedHero()
     {
-        if (_forcedTarget != null)
+        if (_targetHeroPrefab != null)
         {
             Hero[] heroes = FindObjectsOfType<Hero>();
-
             foreach (Hero hero in heroes)
             {
-                if (IsHeroFromSamePrefab(hero.gameObject, _forcedTarget.gameObject) &&
-                    hero.TryGetComponent(out HealthSystem health) && health.IsAlive)
+                if (IsHeroFromPrefab(hero.gameObject, _targetHeroPrefab.gameObject) &&
+                    hero.TryGetComponent(out HealthSystem health) &&
+                    health.IsAlive)
                 {
                     _forcedTarget = hero.transform;
                     _waitingForRespawn = false;
@@ -182,8 +186,13 @@ public class Enemy : MonoBehaviour
         return target.TryGetComponent(out HealthSystem targetHealth) && targetHealth.IsAlive;
     }
 
-    private bool IsHeroFromSamePrefab(GameObject hero1, GameObject hero2)
+    private bool IsHeroFromPrefab(GameObject hero1, GameObject hero2)
     {
         return hero1.name.Split('(')[0] == hero2.name.Split('(')[0];
+    }
+
+    public bool IsWaitingForRespawn()
+    {
+        return _waitingForRespawn;
     }
 }
