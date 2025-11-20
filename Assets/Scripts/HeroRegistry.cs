@@ -34,7 +34,8 @@ public class HeroRegistry : MonoBehaviour
 
     public void RegisterSpawnPoint(EnemySpawnPoint spawnPoint, Hero targetPrefab)
     {
-        if (targetPrefab == null) return;
+        if (targetPrefab == null) 
+            return;
 
         if (!_spawnPointsByPrefab.ContainsKey(targetPrefab))
         {

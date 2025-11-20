@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using Unity.VisualScripting;
+using UnityEngine;
 
 [RequireComponent(typeof(CharacterMovement))]
 [RequireComponent(typeof(HealthSystem))]
@@ -15,12 +16,19 @@ public class Enemy : MonoBehaviour
     private TargetFinder _targetFinder;
     private CharacterAnimation _characterAnimation;
     private EnemyPool _enemyPool;
-    private HeroCoordinator _heroCoordinator;
+    private GameController _gameController;
     private Transform _target;
     private Transform _forcedTarget;
     private bool _waitingForRespawn;
     private float _lastRespawnCheckTime;
     private Hero _targetHeroPrefab;
+
+    public void Initialize(GameController gameController, Hero targetHeroPrefab)
+    {
+        _gameController = gameController;
+        _targetHeroPrefab = targetHeroPrefab;
+        _gameController?.RegisterEnemy(this);
+    }
 
     private void Awake()
     {
@@ -29,11 +37,9 @@ public class Enemy : MonoBehaviour
         _attackSystem = GetComponent<AttackSystem>();
         _targetFinder = GetComponent<TargetFinder>();
         _characterAnimation = GetComponent<CharacterAnimation>();
-        _heroCoordinator = FindObjectOfType<HeroCoordinator>();
         TryGetComponent(out _enemyPool);
 
         _healthSystem.DeathEvent += HandleDeath;
-        _heroCoordinator?.RegisterEnemy(this);
 
         if (TryGetComponent(out HealthSystem health))
         {
@@ -43,7 +49,7 @@ public class Enemy : MonoBehaviour
 
     private void OnDestroy()
     {
-        _heroCoordinator?.UnregisterEnemy(this);
+        _gameController?.UnregisterEnemy(this);
     }
 
     public void SetForcedTarget(Transform target, Hero heroPrefab = null)
@@ -57,22 +63,12 @@ public class Enemy : MonoBehaviour
         }
     }
 
-    public void UpdateForcedTarget(Transform newTarget)
-    {
-        if (newTarget != null)
-        {
-            _forcedTarget = newTarget;
-            _waitingForRespawn = false;
-            _target = _forcedTarget;
-        }
-    }
-
     private void Update()
     {
         if (!_healthSystem.IsAlive)
             return;
 
-        if (_forcedTarget != null)
+        if(_forcedTarget != null)
         {
             if (IsTargetValid(_forcedTarget))
             {
@@ -88,6 +84,7 @@ public class Enemy : MonoBehaviour
                 return;
             }
         }
+
 
         if (_target == null)
         {
@@ -125,20 +122,15 @@ public class Enemy : MonoBehaviour
 
     private void CheckForRespawnedHero()
     {
-        if (_targetHeroPrefab != null)
+        if (_targetHeroPrefab != null && _gameController != null)
         {
-            Hero[] heroes = FindObjectsOfType<Hero>();
-            foreach (Hero hero in heroes)
+            Transform hero = _gameController.FindHeroByPrefab(_targetHeroPrefab);
+            if (hero != null)
             {
-                if (IsHeroFromPrefab(hero.gameObject, _targetHeroPrefab.gameObject) &&
-                    hero.TryGetComponent(out HealthSystem health) &&
-                    health.IsAlive)
-                {
-                    _forcedTarget = hero.transform;
-                    _waitingForRespawn = false;
-                    _target = _forcedTarget;
-                    break;
-                }
+                _forcedTarget = hero.transform;
+                _waitingForRespawn = false;
+                _target = _forcedTarget;
+                
             }
         }
     }
@@ -184,11 +176,6 @@ public class Enemy : MonoBehaviour
             return false;
 
         return target.TryGetComponent(out HealthSystem targetHealth) && targetHealth.IsAlive;
-    }
-
-    private bool IsHeroFromPrefab(GameObject hero1, GameObject hero2)
-    {
-        return hero1.name.Split('(')[0] == hero2.name.Split('(')[0];
     }
 
     public bool IsWaitingForRespawn()

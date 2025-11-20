@@ -25,7 +25,7 @@ public class HealthSystem : MonoBehaviour
 
     public void TakeDamage(int damage)
     {
-        if (!IsAlive)
+        if (!IsAlive || damage <= 0) 
             return;
 
         _currentHealth = Mathf.Max(0, _currentHealth - damage);
@@ -38,6 +38,9 @@ public class HealthSystem : MonoBehaviour
 
     public void Heal(int healAmount)
     {
+        if (healAmount <= 0)
+            return;
+
         _currentHealth = Mathf.Min(_currentHealth + healAmount, _maxHealth);
     }
 

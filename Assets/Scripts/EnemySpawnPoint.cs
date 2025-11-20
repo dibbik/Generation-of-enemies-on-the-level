@@ -11,33 +11,6 @@ public class EnemySpawnPoint : MonoBehaviour
     public float SpawnCooldown => _spawnCooldown;
     public Hero TargetHeroPrefab => _targetHeroPrefab;
 
-    public Transform FindTargetHero()
-    {
-        if (_targetHeroPrefab == null)
-            return null;
-
-        Hero[] heroes = FindObjectsOfType<Hero>();
-
-        foreach (Hero hero in heroes)
-        {
-            if (hero.gameObject.activeInHierarchy &&
-                IsHeroFromPrefab(hero, _targetHeroPrefab) &&
-                hero.TryGetComponent(out HealthSystem health) &&
-                health.IsAlive)
-            {
-                return hero.transform;
-            }
-        }
-
-        return null;
-    }
-
-    private bool IsHeroFromPrefab(Hero heroInstance, Hero heroPrefab)
-    {
-        return heroInstance.GetType() == heroPrefab.GetType() &&
-               heroInstance.gameObject.name.StartsWith(heroPrefab.gameObject.name);
-    }
-
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
@@ -48,13 +21,7 @@ public class EnemySpawnPoint : MonoBehaviour
             Gizmos.DrawIcon(Position, "Enemy", true);
         }
 
-        Transform hero = FindTargetHero();
-        if (hero != null)
-        {
-            Gizmos.color = Color.yellow;
-            Gizmos.DrawLine(Position, hero.position);
-        }
-        else if (_targetHeroPrefab != null)
+        if (_targetHeroPrefab != null)
         {
             Gizmos.color = Color.yellow;
             Gizmos.DrawIcon(transform.position + Vector3.up * 2f, "Hero", true);

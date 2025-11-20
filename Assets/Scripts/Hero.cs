@@ -19,11 +19,13 @@ public class Hero : MonoBehaviour
     private AttackSystem _attackSystem;
     private TargetFinder _targetFinder;
     private CharacterAnimation _characterAnimation;
-    private HeroCoordinator _heroCoordinator;
+    private GameController _gameController;
     private Transform _currentPatrolTarget;
     private Transform _attackTarget;
     private int _currentPatrolIndex;
     private float _lastTargetCheckTime;
+
+    public bool IsAlive => _healthSystem != null && _healthSystem.IsAlive;
 
     private void Awake()
     {
@@ -32,14 +34,11 @@ public class Hero : MonoBehaviour
         _attackSystem = GetComponent<AttackSystem>();
         _targetFinder = GetComponent<TargetFinder>();
         _characterAnimation = GetComponent<CharacterAnimation>();
-        _heroCoordinator = GetComponentInParent<HeroCoordinator>();
 
         _healthSystem.DeathEvent += HandleDeath;
 
-        if (_heroCoordinator != null)
-        {
-            HeroRegistry.Instance?.RegisterHero(this, _heroCoordinator.GetPrefabForHero(this));
-        }
+        _gameController = FindObjectOfType<GameController>();
+        _gameController?.RegisterHero(this);
 
         if (TryGetComponent(out HealthSystem health))
         {
@@ -47,6 +46,10 @@ public class Hero : MonoBehaviour
         }
     }
 
+    private void OnDestroy()
+    {
+        _gameController?.UnregisterHero(this);
+    }
 
     private void Update()
     {
@@ -126,7 +129,6 @@ public class Hero : MonoBehaviour
             return;
 
         _currentPatrolIndex++;
-
         if (_currentPatrolIndex >= _patrolPoints.Count)
         {
             _currentPatrolIndex = 0;
@@ -163,7 +165,7 @@ public class Hero : MonoBehaviour
 
     private void HandleDeath()
     {
-        _heroCoordinator?.HandleHeroDeath(this);
+        _gameController?.HandleHeroDeath(this);
     }
 
     public override int GetHashCode()
@@ -175,9 +177,4 @@ public class Hero : MonoBehaviour
     {
         return other is Hero hero && hero.gameObject.GetInstanceID() == gameObject.GetInstanceID();
     }
-    private void OnDestroy()
-    {
-        HeroRegistry.Instance?.UnregisterHero(this);
-    }
-
 }

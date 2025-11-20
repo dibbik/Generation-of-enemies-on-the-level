@@ -120,8 +120,7 @@ public class TargetFinder : MonoBehaviour
 
     private bool IsValidTarget(HealthSystem target, System.Type targetType)
     {
-        return target != null &&
-               target.IsAlive &&
+        return target != null && target.IsAlive &&
                target.GetComponent(targetType) != null;
     }
 
