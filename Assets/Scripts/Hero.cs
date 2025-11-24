@@ -4,7 +4,6 @@ using System.Collections.Generic;
 [RequireComponent(typeof(CharacterMovement))]
 [RequireComponent(typeof(HealthSystem))]
 [RequireComponent(typeof(AttackSystem))]
-[RequireComponent(typeof(TargetFinder))]
 [RequireComponent(typeof(CharacterAnimation))]
 public class Hero : MonoBehaviour
 {
@@ -17,36 +16,32 @@ public class Hero : MonoBehaviour
     private CharacterMovement _characterMovement;
     private HealthSystem _healthSystem;
     private AttackSystem _attackSystem;
-    private TargetFinder _targetFinder;
     private CharacterAnimation _characterAnimation;
-    private HeroCoordinator _heroCoordinator;
+    private GameController _gameController;
     private Transform _currentPatrolTarget;
     private Transform _attackTarget;
     private int _currentPatrolIndex;
     private float _lastTargetCheckTime;
+
+    public bool IsAlive => _healthSystem != null && _healthSystem.IsAlive;
 
     private void Awake()
     {
         _characterMovement = GetComponent<CharacterMovement>();
         _healthSystem = GetComponent<HealthSystem>();
         _attackSystem = GetComponent<AttackSystem>();
-        _targetFinder = GetComponent<TargetFinder>();
         _characterAnimation = GetComponent<CharacterAnimation>();
-        _heroCoordinator = GetComponentInParent<HeroCoordinator>();
 
         _healthSystem.DeathEvent += HandleDeath;
 
-        if (_heroCoordinator != null)
-        {
-            HeroRegistry.Instance?.RegisterHero(this, _heroCoordinator.GetPrefabForHero(this));
-        }
-
-        if (TryGetComponent(out HealthSystem health))
-        {
-            TargetRegistry.Instance?.RegisterTarget(health);
-        }
+        _gameController = FindObjectOfType<GameController>();
+        _gameController?.RegisterHero(this);
     }
 
+    private void OnDestroy()
+    {
+        _gameController?.UnregisterHero(this);
+    }
 
     private void Update()
     {
@@ -91,6 +86,7 @@ public class Hero : MonoBehaviour
         UpdateAnimations();
     }
 
+
     public void SetPatrolRoute(List<Transform> patrolRoute)
     {
         if (patrolRoute == null || patrolRoute.Count == 0)
@@ -117,7 +113,32 @@ public class Hero : MonoBehaviour
 
     private void CheckForEnemies()
     {
-        _attackTarget = _targetFinder.FindTarget(typeof(Enemy));
+        _attackTarget = FindNearestEnemy();
+    }
+
+    private Transform FindNearestEnemy()
+    {
+        if (_gameController == null) 
+            return null;
+
+        Transform nearest = null;
+        float minSqrDistance = float.MaxValue;
+        Vector3 myPosition = transform.position;
+
+        foreach (var enemy in _gameController.GetAllEnemies())
+        {
+            if (enemy != null && enemy.TryGetComponent(out HealthSystem health) && health.IsAlive)
+            {
+                float sqrDistance = (enemy.transform.position - myPosition).sqrMagnitude;
+                if (sqrDistance < minSqrDistance)
+                {
+                    minSqrDistance = sqrDistance;
+                    nearest = enemy.transform;
+                }
+            }
+        }
+
+        return nearest;
     }
 
     private void SetNextPatrolPoint()
@@ -163,7 +184,7 @@ public class Hero : MonoBehaviour
 
     private void HandleDeath()
     {
-        _heroCoordinator?.HandleHeroDeath(this);
+        _gameController?.HandleHeroDeath(this);
     }
 
     public override int GetHashCode()
@@ -175,9 +196,4 @@ public class Hero : MonoBehaviour
     {
         return other is Hero hero && hero.gameObject.GetInstanceID() == gameObject.GetInstanceID();
     }
-    private void OnDestroy()
-    {
-        HeroRegistry.Instance?.UnregisterHero(this);
-    }
-
 }

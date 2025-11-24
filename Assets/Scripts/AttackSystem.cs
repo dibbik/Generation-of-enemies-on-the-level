@@ -5,7 +5,7 @@ public class AttackSystem : MonoBehaviour
     private const float DefaultAttackCooldown = 1f;
     private const float DefaultAttackDuration = 0.1f;
 
-    [Header("Настройка атаки")]
+    [Header("Настройки атаки")]
     [SerializeField] private float _attackRange = 2f;
     [SerializeField] private int _attackDamage = 10;
     [SerializeField] private float _attackCooldown = DefaultAttackCooldown;

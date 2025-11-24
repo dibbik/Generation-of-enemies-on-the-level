@@ -3,63 +3,27 @@ using System.Collections.Generic;
 
 public class EnemySpawner : MonoBehaviour
 {
-    [Header("Настройки спавна")]
+    [Header("Настройка спавна")]
     [SerializeField] private int _maxEnemiesOnMap = 10;
-    [SerializeField] private float _globalSpawnCooldown = 1f;
-
-    [Header("Ссылки")]
     [SerializeField] private EnemyPool _enemyPool;
     [SerializeField] private List<EnemySpawnPoint> _spawnPoints = new List<EnemySpawnPoint>();
 
+    private GameController _gameController;
     private Dictionary<EnemySpawnPoint, float> _spawnTimers = new Dictionary<EnemySpawnPoint, float>();
-    private float _globalSpawnTimer;
     private int _currentEnemiesCount;
 
-    private void Awake()
+    public void Initialize(GameController gameController)
     {
+        _gameController = gameController;
         InitializeTimers();
     }
 
     private void Update()
     {
-        UpdateSpawning();
+        if (_gameController == null)
+            return;
+
         UpdateEnemiesCount();
-    }
-
-    private void InitializeTimers()
-    {
-        foreach (var spawnPoint in _spawnPoints)
-        {
-            if (spawnPoint != null)
-            {
-                _spawnTimers[spawnPoint] = 0f;
-            }
-        }
-    }
-
-    private void UpdateEnemiesCount()
-    {
-        Enemy[] activeEnemies = FindObjectsOfType<Enemy>();
-        _currentEnemiesCount = 0;
-
-        foreach (Enemy enemy in activeEnemies)
-        {
-            if (enemy.gameObject.activeInHierarchy && enemy.TryGetComponent(out HealthSystem health) && health.IsAlive)
-            {
-                _currentEnemiesCount++;
-            }
-        }
-    }
-
-    private void UpdateSpawning()
-    {
-        _globalSpawnTimer -= Time.deltaTime;
-
-        if (_globalSpawnTimer > 0f)
-            return;
-
-        if (_currentEnemiesCount >= _maxEnemiesOnMap)
-            return;
 
         foreach (var spawnPoint in _spawnPoints)
         {
@@ -68,36 +32,58 @@ public class EnemySpawner : MonoBehaviour
 
             if (!_spawnTimers.ContainsKey(spawnPoint))
             {
-                _spawnTimers[spawnPoint] = 0f;
+                _spawnTimers[spawnPoint] = spawnPoint.SpawnCooldown;
             }
 
             _spawnTimers[spawnPoint] -= Time.deltaTime;
 
-            if (_spawnTimers[spawnPoint] <= 0f)
+            if (_spawnTimers[spawnPoint] <= 0f && _currentEnemiesCount < _maxEnemiesOnMap)
             {
                 SpawnEnemy(spawnPoint);
                 _spawnTimers[spawnPoint] = spawnPoint.SpawnCooldown;
-                _globalSpawnTimer = _globalSpawnCooldown;
-                break;
             }
+        }
+    }
+
+    private void UpdateEnemiesCount()
+    {
+        if (_gameController != null)
+        {
+            _currentEnemiesCount = _gameController.GetEnemiesCount();
+        }
+        else
+        {
+            _currentEnemiesCount = 0;
         }
     }
 
     private void SpawnEnemy(EnemySpawnPoint spawnPoint)
     {
-        if (_enemyPool == null)
+        if (_enemyPool == null || _gameController == null)
             return;
 
-        Enemy enemy = _enemyPool.GetEnemy(spawnPoint.EnemyPrefab, spawnPoint.Position, Quaternion.identity);
+        Enemy enemy = _enemyPool.GetEnemy(spawnPoint.EnemyPrefab);
 
-        if (enemy != null && spawnPoint.TargetHeroPrefab != null)
+        if (enemy != null)
         {
-            Transform hero = spawnPoint.FindTargetHero();
-            if (hero != null)
-            {
-                enemy.SetForcedTarget(hero, spawnPoint.TargetHeroPrefab);
-            }
+            enemy.transform.position = spawnPoint.Position;
+            enemy.transform.rotation = Quaternion.identity;
+            enemy.gameObject.SetActive(true);
+
+            enemy.Initialize(_gameController, spawnPoint.TargetHeroPrefab);
+
+            
         }
     }
 
+    private void InitializeTimers()
+    {
+        foreach (var spawnPoint in _spawnPoints)
+        {
+            if (spawnPoint != null)
+            {
+                _spawnTimers[spawnPoint] = Random.Range(0f, spawnPoint.SpawnCooldown);
+            }
+        }
+    }
 }

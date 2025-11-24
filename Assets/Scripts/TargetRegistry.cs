@@ -3,32 +3,36 @@ using System.Collections.Generic;
 
 public class TargetRegistry : MonoBehaviour
 {
-    private static TargetRegistry _instance;
     private List<HealthSystem> _allTargets = new List<HealthSystem>();
     private List<TargetFinder> _allFinders = new List<TargetFinder>();
-
-    public static TargetRegistry Instance => _instance;
-
-    private void Awake()
-    {
-        if (_instance != null && _instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        _instance = this;
-    }
+    private Dictionary<HealthSystem, System.Action> _targetDeathHandlers = new Dictionary<HealthSystem, System.Action>();
 
     public void RegisterTarget(HealthSystem target)
     {
         if (!_allTargets.Contains(target))
         {
             _allTargets.Add(target);
-            target.DeathEvent += () => UnregisterTarget(target);
+
+            void DeathHandler() => UnregisterTarget(target);
+            target.DeathEvent += DeathHandler;
+
+            _targetDeathHandlers[target] = DeathHandler;
 
             foreach (var finder in _allFinders)
             {
                 finder.RegisterPotentialTarget(target);
+            }
+        }
+    }
+
+    public void UnregisterTarget(HealthSystem target)
+    {
+        if (_allTargets.Remove(target))
+        {
+            if (_targetDeathHandlers.TryGetValue(target, out var handler))
+            {
+                target.DeathEvent -= handler;
+                _targetDeathHandlers.Remove(target);
             }
         }
     }
@@ -46,13 +50,17 @@ public class TargetRegistry : MonoBehaviour
         }
     }
 
-    public void UnregisterTarget(HealthSystem target)
-    {
-        _allTargets.Remove(target);
-    }
-
     public void UnregisterFinder(TargetFinder finder)
     {
         _allFinders.Remove(finder);
+    }
+
+    private void OnDestroy()
+    {
+        foreach (var kvp in _targetDeathHandlers)
+        {
+            kvp.Key.DeathEvent -= kvp.Value;
+        }
+        _targetDeathHandlers.Clear();
     }
 }

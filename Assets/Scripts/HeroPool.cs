@@ -79,7 +79,6 @@ public class HeroPool : MonoBehaviour
         Hero hero = Instantiate(prefab, _poolContainer);
         hero.gameObject.SetActive(false);
         _instanceToPrefabMap[hero] = prefab;
-
         return hero;
     }
 

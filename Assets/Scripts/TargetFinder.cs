@@ -14,16 +14,6 @@ public class TargetFinder : MonoBehaviour
     private Transform _cachedTarget;
     private List<HealthSystem> _potentialTargets = new List<HealthSystem>();
 
-    private void Awake()
-    {
-        TargetRegistry.Instance?.RegisterFinder(this);
-    }
-
-    private void OnDestroy()
-    {
-        TargetRegistry.Instance?.UnregisterFinder(this);
-    }
-
     public void RegisterPotentialTarget(HealthSystem target)
     {
         if (!_potentialTargets.Contains(target))
@@ -120,8 +110,7 @@ public class TargetFinder : MonoBehaviour
 
     private bool IsValidTarget(HealthSystem target, System.Type targetType)
     {
-        return target != null &&
-               target.IsAlive &&
+        return target != null && target.IsAlive &&
                target.GetComponent(targetType) != null;
     }
 

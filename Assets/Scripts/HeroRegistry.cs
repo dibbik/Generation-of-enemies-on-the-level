@@ -3,21 +3,8 @@ using System.Collections.Generic;
 
 public class HeroRegistry : MonoBehaviour
 {
-    private static HeroRegistry _instance;
     private Dictionary<Hero, Hero> _heroes = new Dictionary<Hero, Hero>();
     private Dictionary<Hero, List<EnemySpawnPoint>> _spawnPointsByPrefab = new Dictionary<Hero, List<EnemySpawnPoint>>();
-
-    public static HeroRegistry Instance => _instance;
-
-    private void Awake()
-    {
-        if (_instance != null && _instance != this)
-        {
-            Destroy(gameObject);
-            return;
-        }
-        _instance = this;
-    }
 
     public void RegisterHero(Hero heroInstance, Hero heroPrefab)
     {
@@ -34,7 +21,8 @@ public class HeroRegistry : MonoBehaviour
 
     public void RegisterSpawnPoint(EnemySpawnPoint spawnPoint, Hero targetPrefab)
     {
-        if (targetPrefab == null) return;
+        if (targetPrefab == null)
+            return;
 
         if (!_spawnPointsByPrefab.ContainsKey(targetPrefab))
         {

@@ -14,45 +14,22 @@ public class HeroCoordinator : MonoBehaviour
         public float RespawnDelay = 3f;
     }
 
-    private const float DefaultRespawnDelay = 3f;
-
     [Header("Конфигурация героя")]
     [SerializeField] private List<HeroConfig> _heroConfigs = new List<HeroConfig>();
     [SerializeField] private HeroPool _heroPool;
 
     private Dictionary<Hero, HeroConfig> _heroToConfigMap = new Dictionary<Hero, HeroConfig>();
     private Dictionary<Hero, Coroutine> _respawnCoroutines = new Dictionary<Hero, Coroutine>();
-    private List<Enemy> _allEnemies = new List<Enemy>();
+    private GameController _gameController;
 
-    private void Start()
+    public void Initialize(GameController gameController)
     {
+        _gameController = gameController;
+
         if (_heroPool == null)
             _heroPool = GetComponent<HeroPool>();
 
         SpawnInitialHeroes();
-        CacheAllEnemies();
-    }
-
-    public Hero GetPrefabForHero(Hero heroInstance)
-    {
-        if (_heroToConfigMap.ContainsKey(heroInstance))
-        {
-            return _heroToConfigMap[heroInstance].HeroPrefab;
-        }
-        return null;
-    }
-
-    public void RegisterEnemy(Enemy enemy)
-    {
-        if (!_allEnemies.Contains(enemy))
-        {
-            _allEnemies.Add(enemy);
-        }
-    }
-
-    public void UnregisterEnemy(Enemy enemy)
-    {
-        _allEnemies.Remove(enemy);
     }
 
     public void HandleHeroDeath(Hero hero)
@@ -79,40 +56,17 @@ public class HeroCoordinator : MonoBehaviour
             {
                 _heroToConfigMap[hero] = config;
                 SetupHero(hero, config);
-                NotifyEnemiesAboutNewHero(hero);
                 return;
             }
         }
     }
 
-    private void NotifyEnemiesAboutNewHero(Hero hero)
+    public void RegisterEnemy(Enemy enemy) { }
+    public void UnregisterEnemy(Enemy enemy) { }
+
+    public Hero GetPrefabForHero(Hero heroInstance)
     {
-        for (int i = _allEnemies.Count - 1; i >= 0; i--)
-        {
-            Enemy enemy = _allEnemies[i];
-            if (enemy == null)
-            {
-                _allEnemies.RemoveAt(i);
-                continue;
-            }
-
-            if (enemy.gameObject.activeInHierarchy && enemy.IsWaitingForRespawn())
-            {
-                enemy.UpdateForcedTarget(hero.transform);
-            }
-        }
-    }
-
-    private void CacheAllEnemies()
-    {
-        Enemy[] enemies = FindObjectsOfType<Enemy>();
-        _allEnemies.Clear();
-        _allEnemies.AddRange(enemies);
-
-        foreach (Enemy enemy in enemies)
-        {
-            RegisterEnemy(enemy);
-        }
+        return _heroToConfigMap.ContainsKey(heroInstance) ? _heroToConfigMap[heroInstance].HeroPrefab : null;
     }
 
     private void SpawnInitialHeroes()
@@ -148,6 +102,11 @@ public class HeroCoordinator : MonoBehaviour
 
     private void SpawnHero(HeroConfig config)
     {
+        if (_heroPool == null)
+        {
+            return;
+        }
+
         Hero hero = _heroPool.GetHero(config.HeroPrefab);
 
         if (hero != null)
@@ -159,7 +118,9 @@ public class HeroCoordinator : MonoBehaviour
     private void SetupHero(Hero hero, HeroConfig config)
     {
         if (config.SpawnPoint == null)
+        {
             return;
+        }
 
         hero.transform.position = config.SpawnPoint.position;
         hero.transform.rotation = config.SpawnPoint.rotation;
